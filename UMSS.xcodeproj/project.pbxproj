@@ -6,6 +6,11 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		0F3581E52D50596300574AE0 /* GooglePlaces in Frameworks */ = {isa = PBXBuildFile; productRef = 0F3581E42D50596300574AE0 /* GooglePlaces */; };
+		0F3581E72D50596300574AE0 /* GooglePlacesSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 0F3581E62D50596300574AE0 /* GooglePlacesSwift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		0FA2AE922D4B122E0030AE83 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -52,6 +57,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0F3581E52D50596300574AE0 /* GooglePlaces in Frameworks */,
+				0F3581E72D50596300574AE0 /* GooglePlacesSwift in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -112,6 +119,8 @@
 			);
 			name = UMSS;
 			packageProductDependencies = (
+				0F3581E42D50596300574AE0 /* GooglePlaces */,
+				0F3581E62D50596300574AE0 /* GooglePlacesSwift */,
 			);
 			productName = UMSS;
 			productReference = 0FA2AE7C2D4B122D0030AE83 /* UMSS.app */;
@@ -195,6 +204,9 @@
 			);
 			mainGroup = 0FA2AE732D4B122D0030AE83;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				0F95E5C62D50540E00CFC294 /* XCRemoteSwiftPackageReference "ios-places-sdk" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 0FA2AE7D2D4B122D0030AE83 /* Products */;
 			projectDirPath = "";
@@ -558,6 +570,30 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		0F95E5C62D50540E00CFC294 /* XCRemoteSwiftPackageReference "ios-places-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googlemaps/ios-places-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.3.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		0F3581E42D50596300574AE0 /* GooglePlaces */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0F95E5C62D50540E00CFC294 /* XCRemoteSwiftPackageReference "ios-places-sdk" */;
+			productName = GooglePlaces;
+		};
+		0F3581E62D50596300574AE0 /* GooglePlacesSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0F95E5C62D50540E00CFC294 /* XCRemoteSwiftPackageReference "ios-places-sdk" */;
+			productName = GooglePlacesSwift;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 0FA2AE742D4B122D0030AE83 /* Project object */;
 }
