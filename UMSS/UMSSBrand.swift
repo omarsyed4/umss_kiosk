@@ -1,3 +1,11 @@
+//
+//  UMSSBrand.swift
+//  UMSS
+//
+//  Created by Omar Syed on 2/2/25.
+//
+
+
 import SwiftUI
 
 struct UMSSBrand {
