@@ -78,6 +78,12 @@ class PatientFormViewModel: ObservableObject {
                     case "AddressField":
                         print("[DEBUG] Found \"AddressField\". Setting to: \(formData.address)")
                         annotation.contents = formData.address
+                        print("Address: \(formData.address)")
+                        print("City: \(formData.city)")
+                        print("State: \(formData.state)")
+                        print("Zip: \(formData.zip)")
+                        print("City/State/Zip: \(formData.cityStateZip)")
+
                         
                     case "CityStateZipField":
                         print("[DEBUG] Found \"CityStateZipField\". Setting to: \(formData.cityStateZip)")
