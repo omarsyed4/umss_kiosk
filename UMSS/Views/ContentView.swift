@@ -59,9 +59,13 @@ struct ContentView: View {
                             AddressStepView(
                                 fullAddress: $viewModel.patientForm.rawAddress,
                                 streetAddress: $viewModel.patientForm.address,
+                                city: $viewModel.patientForm.city,
+                                state: $viewModel.patientForm.state,
+                                zip: $viewModel.patientForm.zip,
                                 cityStateZip: $viewModel.patientForm.cityStateZip,
                                 isPickerPresented: $isAddressPickerPresented
                             )
+                                                        
 
                         // Step 3 - Gender & Race
                         } else if currentStep == 3 {
@@ -172,7 +176,12 @@ struct ContentView: View {
             // Present Google Places Picker
             .sheet(isPresented: $isAddressPickerPresented) {
                 GoogleAddressAutocompleteView(
-                    address: $viewModel.patientForm.address,
+                    rawAddress: $viewModel.patientForm.rawAddress,
+                    streetAddress: $viewModel.patientForm.address,
+                    city: $viewModel.patientForm.city,
+                    state: $viewModel.patientForm.state,
+                    zip: $viewModel.patientForm.zip,
+                    cityStateZip: $viewModel.patientForm.cityStateZip,
                     isPresented: $isAddressPickerPresented
                 )
             }
@@ -227,15 +236,18 @@ struct StepView: View {
 
 // MARK: - AddressStepView
 struct AddressStepView: View {
-    // One binding for the combined address from Google
     @Binding var fullAddress: String
     
-    // Separate bindings for the final splitted results
+    // Split into individual bindings
     @Binding var streetAddress: String
+    @Binding var city: String
+    @Binding var state: String
+    @Binding var zip: String
+    
+    // Combined "City, State Zip"
     @Binding var cityStateZip: String
     
     @Binding var isPickerPresented: Bool
-    
     @State private var previousFullAddress: String = ""
     
     var body: some View {
@@ -246,6 +258,7 @@ struct AddressStepView: View {
             
             Button(action: {
                 isPickerPresented = true
+                print("Picker presented")
             }) {
                 if fullAddress.isEmpty {
                     Text("Tap to select your address")
@@ -267,43 +280,15 @@ struct AddressStepView: View {
             }
         }
         .onAppear {
-            previousFullAddress = fullAddress
-            // If we have a pre-filled address, parse it
-            parseAndAssign(fullAddress)
+            print("onAppear called")
         }
         .onChange(of: fullAddress) { newValue in
-            previousFullAddress = newValue
-            parseAndAssign(newValue)
+            print("onChange called with new value: \(newValue)")
+            
         }
-    }
-    
-    /// Splits the combined address into "street address" and "city/state/zip"
-    private func parseAndAssign(_ combined: String) {
-        // EXAMPLE SPLITTING STRATEGY:
-        // 1) Attempt to split by newline,
-        // 2) If not found, try last comma,
-        // 3) else store everything in streetAddress.
-        
-        let lines = combined.components(separatedBy: "\n")
-        if lines.count >= 2 {
-            // First line is street, the rest joined is cityStateZip
-            streetAddress = lines[0].trimmingCharacters(in: .whitespacesAndNewlines)
-            cityStateZip = lines.dropFirst().joined(separator: ", ").trimmingCharacters(in: .whitespacesAndNewlines)
-            return
-        }
-        
-        // If no newline found, try to split by the last comma
-        if let lastCommaRange = combined.range(of: ",", options: .backwards) {
-            streetAddress = String(combined[..<lastCommaRange.lowerBound]).trimmingCharacters(in: .whitespacesAndNewlines)
-            cityStateZip = String(combined[lastCommaRange.upperBound...]).trimmingCharacters(in: .whitespacesAndNewlines)
-            return
-        }
-        
-        // Fallback: everything is street address, cityStateZip empty
-        streetAddress = combined
-        cityStateZip = ""
     }
 }
+
 
 // MARK: - BasicInfoStepView
 struct BasicInfoStepView: View {

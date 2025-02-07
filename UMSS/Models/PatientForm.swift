@@ -22,10 +22,13 @@ struct PatientForm {
     
     var dob: String = ""
     var phone: String = ""
-    var rawAddress: String = ""
+    var rawAddress: String = ""    
     var address: String = ""
+    var city: String = ""
+    var state: String = ""
+    var zip: String = ""
     var cityStateZip: String = ""
-    
+
     // Gender checkboxes
     var selectedGender: String = ""
     var isMale: Bool = false
