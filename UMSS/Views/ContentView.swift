@@ -18,7 +18,7 @@ struct ContentView: View {
     @State private var isAddressPickerPresented = false
 
     // Adjust total steps as needed
-    private var totalSteps: Int { 6 }
+    private var totalSteps: Int { 5 }
 
     var body: some View {
         NavigationView {
@@ -69,25 +69,15 @@ struct ContentView: View {
 
                         // Step 3 - Gender & Race
                         } else if currentStep == 3 {
-                            GenderRaceStep(
+                            DemographicsStep(
                                 selectedGender: $viewModel.patientForm.selectedGender,
-                                isMale: $viewModel.patientForm.isMale,
-                                isFemale: $viewModel.patientForm.isFemale,
-                                isWhite: $viewModel.patientForm.isWhite,
-                                isBlack: $viewModel.patientForm.isBlack,
-                                isAsian: $viewModel.patientForm.isAsian,
-                                isAmIndian: $viewModel.patientForm.isAmIndian
+                                selectedRace: $viewModel.patientForm.selectedRace,
+                                selectedMaritalStatus: $viewModel.patientForm.selectedMaritalStatus,
+                                selectedEthnicity: $viewModel.patientForm.selectedEthnicity
                             )
 
-                        // Step 4 - Ethnicity
+                        // Step 4 - Signature & Date
                         } else if currentStep == 4 {
-                            EthnicityStep(
-                                isHispanic: $viewModel.patientForm.isHispanic,
-                                isNonHispanic: $viewModel.patientForm.isNonHispanic
-                            )
-
-                        // Step 5 - Signature & Date
-                        } else if currentStep == 5 {
                             SignatureStep(
                                 signatureImage: $viewModel.patientForm.signatureImage,
                                 date: $viewModel.patientForm.date
@@ -181,6 +171,7 @@ struct ContentView: View {
                     city: $viewModel.patientForm.city,
                     state: $viewModel.patientForm.state,
                     zip: $viewModel.patientForm.zip,
+                    cityState: $viewModel.patientForm.cityState,
                     cityStateZip: $viewModel.patientForm.cityStateZip,
                     isPresented: $isAddressPickerPresented
                 )
@@ -298,93 +289,257 @@ struct BasicInfoStepView: View {
     @Binding var dob: String
     @Binding var phone: String
 
+    @State private var selectedDate: Date = Date()
+    
     var body: some View {
-        VStack(spacing: 30) {
-            Text("Basic Info")
-                .font(.title)
-                .multilineTextAlignment(.center)
-            
-            Group {
-                TextField("Email", text: $email)
-                TextField("First Name", text: $firstName)
-                TextField("Last Name", text: $lastName)
-                TextField("DOB (MM/DD/YYYY)", text: $dob)
-                TextField("Phone Number", text: $phone)
+        VStack(spacing: 20) {
+            Text("Basic Information")
+                .font(.largeTitle)
+                .fontWeight(.bold)
+                .foregroundColor(.primary)
+                .padding(.bottom, 10)
+
+            VStack(spacing: 15) {
+                CustomTextField(icon: "envelope", placeholder: "Email", text: $email, keyboardType: .emailAddress)
+                CustomTextField(icon: "person", placeholder: "First Name", text: $firstName, keyboardType: .default)
+                CustomTextField(icon: "person", placeholder: "Last Name", text: $lastName, keyboardType: .default)
+                
+                // Date Picker for DOB
+                VStack(alignment: .leading, spacing: 5) {
+                    Text("Date of Birth")
+                        .font(.headline)
+                        .foregroundColor(.secondary)
+                    DatePicker("Select Date", selection: $selectedDate, displayedComponents: .date)
+                        .datePickerStyle(CompactDatePickerStyle())
+                        .labelsHidden()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .onChange(of: selectedDate) { newValue in
+                            let formatter = DateFormatter()
+                            formatter.dateFormat = "MM/dd/yyyy"
+                            dob = formatter.string(from: newValue)
+                        }
+                }
+                .padding()
+                .background(RoundedRectangle(cornerRadius: 10).fill(Color(.systemGray6)))
+                
+                CustomTextField(icon: "phone", placeholder: "Phone Number", text: $phone, keyboardType: .phonePad)
             }
-            .textFieldStyle(RoundedBorderTextFieldStyle())
-            .padding(.horizontal, 100)
+            .padding(.horizontal, 25)
+            
+            Spacer()
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.vertical, 40)
-    }
-}
-
-// MARK: - GenderRaceStep
-struct GenderRaceStep: View {
-    @Binding var selectedGender: String  // "Male" or "Female"
-    
-    // Gender booleans
-    @Binding var isMale: Bool
-    @Binding var isFemale: Bool
-
-    // Race checkboxes
-    @Binding var isWhite: Bool
-    @Binding var isBlack: Bool
-    @Binding var isAsian: Bool
-    @Binding var isAmIndian: Bool
-
-    var body: some View {
-        VStack(spacing: 30) {
-            Text("Gender & Race")
-                .font(.title)
-            
-            Picker("Gender", selection: $selectedGender) {
-                Text("Male").tag("Male")
-                Text("Female").tag("Female")
-            }
-            .pickerStyle(SegmentedPickerStyle())
-            .padding(.horizontal, 50)
-            .onChange(of: selectedGender) { newGender in
-                updateGenderBooleans(newGender)
-            }
-            
-            VStack(alignment: .leading, spacing: 10) {
-                Toggle("White", isOn: $isWhite)
-                Toggle("Black / African American", isOn: $isBlack)
-                Toggle("Asian", isOn: $isAsian)
-                Toggle("American Indian", isOn: $isAmIndian)
-            }
-            .padding(.horizontal, 100)
-        }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-
-    private func updateGenderBooleans(_ gender: String) {
-        isMale = (gender == "Male")
-        isFemale = (gender == "Female")
+        .background(Color(.systemGroupedBackground).edgesIgnoringSafeArea(.all))
     }
 }
 
-
-
-
-// MARK: - EthnicityStep
-struct EthnicityStep: View {
-    @Binding var isHispanic: Bool
-    @Binding var isNonHispanic: Bool
+// MARK: - Custom TextField with Icons
+struct CustomTextField: View {
+    var icon: String
+    var placeholder: String
+    @Binding var text: String
+    var keyboardType: UIKeyboardType
     
     var body: some View {
-        VStack(spacing: 30) {
-            Text("Ethnicity")
-                .font(.title)
+        HStack {
+            Image(systemName: icon)
+                .foregroundColor(.gray)
+                .frame(width: 20)
             
-            Toggle("Hispanic/Latino", isOn: $isHispanic)
-            Toggle("Not Hispanic/Latino", isOn: $isNonHispanic)
+            TextField(placeholder, text: $text)
+                .keyboardType(keyboardType)
+                .padding(.vertical, 10)
         }
-        .padding(.horizontal, 100)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(.horizontal, 15)
+        .background(RoundedRectangle(cornerRadius: 10).fill(Color(.systemGray6)))
     }
 }
+
+// MARK: - DemographicsStep
+struct DemographicsStep: View {
+    @Binding var selectedGender: String
+    @Binding var selectedRace: String
+    @Binding var selectedMaritalStatus: String
+    @Binding var selectedEthnicity: String
+    
+    private let genderOptions = ["Male", "Female"]
+    private let raceOptions = ["White", "Black / African American", "Asian", "American Indian"]
+    private let maritalStatusOptions = ["Single", "Married", "Divorced", "Widowed"]
+    private let ethnicityOptions = ["Hispanic/Latino", "Not Hispanic/Latino"]
+    
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 30) {
+                // Header
+                VStack(spacing: 8) {
+                    Text("Demographic Information")
+                        .font(.title2)
+                        .fontWeight(.semibold)
+                    
+                    Text("Please provide your demographic details")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+                .padding(.vertical, 20)
+                
+                // Gender Section
+                SectionCard(title: "Gender") {
+                    HStack(spacing: 12) {
+                        ForEach(genderOptions, id: \.self) { option in
+                            ChoicePill(
+                                title: option,
+                                isSelected: selectedGender == option
+                            ) {
+                                selectedGender = option
+                            }
+                        }
+                    }
+                    .padding(.top, 8)
+                }
+                
+                // Race Section
+                SectionCard(title: "Race") {
+                    VStack(spacing: 12) {
+                        ForEach(raceOptions, id: \.self) { option in
+                            ChoiceRow(
+                                title: option,
+                                isSelected: selectedRace == option
+                            ) {
+                                selectedRace = option
+                            }
+                        }
+                    }
+                    .padding(.vertical, 8)
+                }
+                
+                // Marital Status Section
+                SectionCard(title: "Marital Status") {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 12) {
+                            ForEach(maritalStatusOptions, id: \.self) { option in
+                                ChoicePill(
+                                    title: option,
+                                    isSelected: selectedMaritalStatus == option
+                                ) {
+                                    selectedMaritalStatus = option
+                                }
+                            }
+                        }
+                        .padding(.vertical, 8)
+                    }
+                }
+                
+                // Ethnicity Section
+                SectionCard(title: "Ethnicity") {
+                    VStack(spacing: 12) {
+                        ForEach(ethnicityOptions, id: \.self) { option in
+                            ChoiceRow(
+                                title: option,
+                                isSelected: selectedEthnicity == option
+                            ) {
+                                selectedEthnicity = option
+                            }
+                        }
+                    }
+                    .padding(.vertical, 8)
+                }
+                
+                Spacer()
+            }
+            .padding(.horizontal)
+        }
+        .background(Color(.systemGroupedBackground).ignoresSafeArea())
+    }
+}
+
+// Reusable Section Card
+struct SectionCard<Content: View>: View {
+    let title: String
+    let content: Content
+    
+    init(title: String, @ViewBuilder content: () -> Content) {
+        self.title = title
+        self.content = content()
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(title)
+                .font(.headline)
+                .foregroundColor(.primary)
+                .padding(.horizontal, 16)
+            
+            VStack {
+                content
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity)
+            .background(Color(.secondarySystemGroupedBackground))
+            .cornerRadius(12)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color(.systemGray4), lineWidth: 1)
+            )
+        }
+    }
+}
+
+// Reusable Choice Components
+struct ChoicePill: View {
+    let title: String
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(.subheadline)
+                .padding(.vertical, 10)
+                .padding(.horizontal, 16)
+                .foregroundColor(isSelected ? .white : .primary)
+                .background(isSelected ? Color.blue : Color(.systemGray5))
+                .cornerRadius(20)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(isSelected ? Color.blue : Color(.systemGray3), lineWidth: 1)
+                )
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+struct ChoiceRow: View {
+    let title: String
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            HStack {
+                Text(title)
+                    .foregroundColor(.primary)
+                
+                Spacer()
+                
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.blue)
+                }
+            }
+            .padding()
+            .background(Color(.tertiarySystemGroupedBackground))
+            .cornerRadius(8)
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(isSelected ? Color.blue : Color(.systemGray4), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+
 
 // MARK: - SignatureCanvasView
 /// A SwiftUI wrapper around PencilKit's PKCanvasView.
