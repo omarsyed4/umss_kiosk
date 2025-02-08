@@ -594,18 +594,27 @@ struct DemographicsStep: View {
                                 isSelected: selectedRace == option
                             ) {
                                 selectedRace = option
-                                
-                                // Handle individual
                                 if option == "White" {
-                                    isWhite.toggle()
+                                    isWhite = true
+                                    isBlack = false
+                                    isAsian = false
+                                    isAmIndian = false
                                 } else if option == "Black / African American" {
-                                    isBlack.toggle()
+                                    isWhite = false
+                                    isBlack = true
+                                    isAsian = false
+                                    isAmIndian = false
                                 } else if option == "Asian" {
-                                    isAsian.toggle()
+                                    isWhite = false
+                                    isBlack = false
+                                    isAsian = true
+                                    isAmIndian = false
                                 } else if option == "American Indian" {
-                                    isAmIndian.toggle()
+                                    isWhite = false
+                                    isBlack = false
+                                    isAsian = false
+                                    isAmIndian = true
                                 }
-                                
                             }
                         }
                     }
