@@ -12,6 +12,7 @@ import PencilKit
 struct ContentView: View {
     @StateObject private var viewModel = PatientFormViewModel()
     @State private var showPDFPreview = false
+    @State private var isGeneratingPDF = false
     @State private var pdfDocument: PDFDocument?
     @State private var currentStep: Int = 0
     @State private var moveDirection: Edge = .trailing
@@ -29,7 +30,7 @@ struct ContentView: View {
                     if currentStep == 0 {
                         HeaderView()
                     }
-
+                    
                     ScrollView {
                         VStack(spacing: 0) {
                             // Step 0 - "Let's Begin"
@@ -59,14 +60,14 @@ struct ContentView: View {
                                 )
                             }
                             
-
+                            
                             // Step 3 - Demographics
                             else if currentStep == 2 {
                                 DemographicsStep(
                                     selectedGender: $viewModel.patientForm.selectedGender,
                                     selectedRace: $viewModel.patientForm.selectedRace,
                                     selectedMaritalStatus: $viewModel.patientForm.selectedMaritalStatus,
-                                    selectedEthnicity: $viewModel.patientForm.selectedEthnicity, 
+                                    selectedEthnicity: $viewModel.patientForm.selectedEthnicity,
                                     selectedIncome: $viewModel.patientForm.selectedIncome,
                                     isMale: $viewModel.patientForm.isMale,
                                     isFemale: $viewModel.patientForm.isFemale,
@@ -129,9 +130,9 @@ struct ContentView: View {
                                         .cornerRadius(8)
                                 }
                             }
-
+                            
                             Spacer()
-
+                            
                             // Next or Preview PDF button
                             if currentStep < totalSteps - 1 {
                                 Button(action: {
@@ -150,23 +151,32 @@ struct ContentView: View {
                                 }
                             } else {
                                 Button(action: {
+                                    isGeneratingPDF = true
+                                    let generatedPDF = viewModel.generateFilledPDF()
                                     DispatchQueue.main.async {
-                                        pdfDocument = viewModel.generateFilledPDF()
+                                        pdfDocument = generatedPDF
+                                        isGeneratingPDF = false
                                         showPDFPreview = true
                                     }
                                 }) {
-                                    Text("Preview PDF")
-                                        .font(.headline)
-                                        .foregroundColor(.white)
-                                        .padding(.vertical, 10)
-                                        .padding(.horizontal, 20)
-                                        .background(UMSSBrand.gold)
-                                        .cornerRadius(8)
+                                    if isGeneratingPDF {
+                                        ProgressView()
+                                    } else {
+                                        Text("Preview PDF")
+                                            .font(.headline)
+                                            .foregroundColor(.white)
+                                            .padding(.vertical, 10)
+                                            .padding(.horizontal, 20)
+                                            .background(UMSSBrand.gold)
+                                            .cornerRadius(8)
+                                    }
                                 }
                             }
                         }
-                        .padding()
-                        .background(Color.white.shadow(radius: 5))
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 10)
+                        .background(Color.white)
+                        .shadow(color: Color.black.opacity(0.2), radius: 5, x: 0, y: -2)
                     }
                 }
             }

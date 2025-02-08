@@ -150,6 +150,10 @@ class PatientFormViewModel: ObservableObject {
                         case "Date":
                             annotation.contents = formData.date
                             print("Date field set to: \(formData.date)")
+                        
+                        case "AgeField":
+                            annotation.contents = formData.age
+                            print("AgeField set to: \(formData.age)")
 
                         // Gender Checkboxes
                         case "MaleCheck":
