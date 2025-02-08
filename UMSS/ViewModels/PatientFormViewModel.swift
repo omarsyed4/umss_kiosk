@@ -185,20 +185,35 @@ class PatientFormViewModel: ObservableObject {
             print("[DEBUG] No signature image found.")
             return
         }
-
-        guard let firstPage = pdfDocument.page(at: 1) else {
-            print("[DEBUG] Could not get first page for signature annotation.")
-            return
+        
+        // Define signature bounds for each page (pages are zero-indexed).
+        // Adjust the CGRect values to position the signatures as desired.
+        let signatureBoundsPerPage: [Int: [CGRect]] = [
+            1: [CGRect(x: 105, y: 500, width: 100, height: 25)],
+            2: [CGRect(x: 80, y: 70, width: 100, height: 25)],
+            3: [
+                CGRect(x: 215, y: 340, width: 100, height: 25),
+                CGRect(x: 105, y: 210, width: 100, height: 25),
+                CGRect(x: 105, y: 135, width: 100, height: 25),
+                CGRect(x: 105, y: 87, width: 100, height: 25),
+                CGRect(x: 105, y: 45, width: 100, height: 25),
+            ],
+        ]
+        
+        // Loop over each page index with defined signature bounds.
+        for (pageIndex, boundsArray) in signatureBoundsPerPage {
+            guard let page = pdfDocument.page(at: pageIndex) else {
+                print("[DEBUG] Could not get page at index \(pageIndex).")
+                continue
+            }
+            
+            // Add all signature annotations for this page.
+            for bounds in boundsArray {
+                let stampAnnotation = StampAnnotation(bounds: bounds, image: sigImage)
+                page.addAnnotation(stampAnnotation)
+                print("[DEBUG] Placed signature image annotation on page \(pageIndex + 1) at \(bounds).")
+            }
         }
-
-        let annotationBounds = CGRect(x: 105, y: 500, width: 100, height: 25)
-
-        // Create our custom stamp annotation with the image.
-        let stampAnnotation = StampAnnotation(bounds: annotationBounds, image: sigImage)
-
-        // Add the annotation to the page.
-        firstPage.addAnnotation(stampAnnotation)
-        print("[DEBUG] Placed signature image annotation on page 0 at \(annotationBounds).")
     }
 }
 
