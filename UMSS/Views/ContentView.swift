@@ -52,7 +52,10 @@ struct ContentView: View {
                                     firstName: $viewModel.patientForm.firstName,
                                     lastName: $viewModel.patientForm.lastName,
                                     dob: $viewModel.patientForm.dob,
-                                    phone: $viewModel.patientForm.phone
+                                    age: $viewModel.patientForm.age,
+                                    phone: $viewModel.patientForm.phone,
+                                    reasonForVisit: $viewModel.patientForm.reasonForVisit,
+                                    isExistingPatient: $viewModel.patientForm.isExistingPatient
                                 )
                             }
                             
@@ -63,7 +66,22 @@ struct ContentView: View {
                                     selectedGender: $viewModel.patientForm.selectedGender,
                                     selectedRace: $viewModel.patientForm.selectedRace,
                                     selectedMaritalStatus: $viewModel.patientForm.selectedMaritalStatus,
-                                    selectedEthnicity: $viewModel.patientForm.selectedEthnicity,
+                                    selectedEthnicity: $viewModel.patientForm.selectedEthnicity, 
+                                    selectedIncome: $viewModel.patientForm.selectedIncome,
+                                    isMale: $viewModel.patientForm.isMale,
+                                    isFemale: $viewModel.patientForm.isFemale,
+                                    isWhite: $viewModel.patientForm.isWhite,
+                                    isBlack: $viewModel.patientForm.isBlack,
+                                    isAsian: $viewModel.patientForm.isAsian,
+                                    isAmIndian: $viewModel.patientForm.isAmIndian,
+                                    isHispanic: $viewModel.patientForm.isHispanic,
+                                    isNonHispanic: $viewModel.patientForm.isNonHispanic,
+                                    isSingle: $viewModel.patientForm.isSingle,
+                                    isMarried: $viewModel.patientForm.isMarried,
+                                    isDivorced: $viewModel.patientForm.isDivorced,
+                                    isWidowed: $viewModel.patientForm.isWidowed,
+                                    selectedFamilySize: $viewModel.patientForm.selectedFamilySize,
+                                    selectedIncomeThreshold: $viewModel.patientForm.selectedIncomeThreshold,
                                     fullAddress: $viewModel.patientForm.rawAddress,
                                     streetAddress: $viewModel.patientForm.address,
                                     city: $viewModel.patientForm.city,
@@ -200,9 +218,13 @@ struct BasicInfoStepView: View {
     @Binding var firstName: String
     @Binding var lastName: String
     @Binding var dob: String
+    @Binding var age: String
     @Binding var phone: String
-    @State private var selectedDate: Date = Date()
+    @Binding var reasonForVisit: String  // NEW binding for reason for visit
+    @Binding var isExistingPatient: Bool
     
+    
+    @State private var selectedDate: Date = Date()
     
     // Custom Number Pad Layout for Phone Entry
     private let numberPadButtons: [[String]] = [
@@ -211,7 +233,6 @@ struct BasicInfoStepView: View {
         ["7", "8", "9"],
         ["Clear", "0", "Delete"]
     ]
-    
     
     var body: some View {
         ScrollView {
@@ -231,22 +252,9 @@ struct BasicInfoStepView: View {
                 // MARK: - Basic Information Section
                 SectionCard(title: "Basic Information") {
                     VStack(spacing: 20) {
-                        // Email Field with Domain Buttons
-                        HStack(spacing: 10) {
-                            TextField("Email", text: $email)
-                                .keyboardType(.emailAddress)
-                                .padding(12)
-                                .background(Color.white)
-                                .cornerRadius(8)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .stroke(Color.gray.opacity(0.5), lineWidth: 1)
-                                )
-                        }
-                        
-                        // First and Last Name Fields
                         HStack(spacing: 10) {
                             TextField("First Name", text: $firstName)
+                                .keyboardType(.emailAddress)
                                 .padding(12)
                                 .background(Color.white)
                                 .cornerRadius(8)
@@ -256,6 +264,7 @@ struct BasicInfoStepView: View {
                                 )
                             
                             TextField("Last Name", text: $lastName)
+                                .keyboardType(.emailAddress)
                                 .padding(12)
                                 .background(Color.white)
                                 .cornerRadius(8)
@@ -264,45 +273,160 @@ struct BasicInfoStepView: View {
                                         .stroke(Color.gray.opacity(0.5), lineWidth: 1)
                                 )
                         }
-                        
-                        // Date of Birth Picker
-                        VStack(alignment: .leading, spacing: 5) {
-                            Text("Date of Birth")
-                                .font(.headline)
-                                .foregroundColor(.secondary)
-                            DatePicker("", selection: $selectedDate, displayedComponents: .date)
-                                .datePickerStyle(CompactDatePickerStyle())
-                                .labelsHidden()
-                                .onChange(of: selectedDate) { newValue in
-                                    let formatter = DateFormatter()
-                                    formatter.dateFormat = "MM/dd/yyyy"
-                                    dob = formatter.string(from: newValue)
+
+                        // Email Field with Domain Buttons
+                        HStack(spacing: 10) {
+                            
+                            VStack(alignment: .leading, spacing: 10) {
+                                TextField("Email", text: $email)
+                                    .keyboardType(.emailAddress)
+                                    .padding(12)
+                                    .background(Color.white)
+                                    .cornerRadius(8)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .stroke(Color.gray.opacity(0.5), lineWidth: 1)
+                                    )
+                                
+                                // Horizontal list of domain buttons
+                                HStack(spacing: 10) {
+                                    Button(
+                                        action: {
+                                        if !email.contains("@") {
+                                            email += "@gmail.com"
+                                        }
+                                    }) {
+                                        Text("@gmail.com")
+                                            .padding(10)
+                                            .background(UMSSBrand.navy)
+                                            .foregroundColor(.white)
+                                            .cornerRadius(8)
+                                    }
+                                    
+                                    Button(action: {
+                                        if !email.contains("@") {
+                                            email += "@hotmail.com"
+                                        }
+                                    }) {
+                                        Text("@hotmail.com")
+                                            .padding(10)
+                                            .background(UMSSBrand.navy)
+                                            .foregroundColor(.white)
+                                            .cornerRadius(8)
+                                    }
+                                    
+                                    Button(action: {
+                                        if !email.contains("@") {
+                                            email += "@yahoo.com"
+                                        }
+                                    }) {
+                                        Text("@yahoo.com")
+                                            .padding(10)
+                                            .background(UMSSBrand.navy)
+                                            .foregroundColor(.white)
+                                            .cornerRadius(8)
+                                    }
+                                    
+                                    Button(action: {
+                                        if !email.contains("@") {
+                                            email += "@outlook.com"
+                                        }
+                                    }) {
+                                        Text("@outlook.com")
+                                            .padding(10)
+                                            .background(UMSSBrand.navy)
+                                            .foregroundColor(.white)
+                                            .cornerRadius(8)
+                                    }
+                                    
+                                    Button(action: {
+                                        if !email.contains("@") {
+                                            email += "@icloud.com"
+                                        }
+                                    }) {
+                                        Text("@icloud.com")
+                                            .padding(10)
+                                            .background(UMSSBrand.navy)
+                                            .foregroundColor(.white)
+                                            .cornerRadius(8)
+                                    }
                                 }
+                            }
                         }
-                        .padding(12)
-                        .background(Color.white)
-                        .cornerRadius(8)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color.gray.opacity(0.5), lineWidth: 1)
-                        )
+                        // New: Row with Date of Birth and Age fields
+                        HStack(spacing: 10) {
+                            // Date of Birth Field
+                            HStack(spacing: 10) {
+                                Text("Date of Birth")
+                                    .font(.headline)
+                                    .foregroundColor(.secondary)
+                                DatePicker("", selection: $selectedDate, displayedComponents: .date)
+                                    .datePickerStyle(CompactDatePickerStyle())
+                                    .labelsHidden()
+                                    .onChange(of: selectedDate) { newValue in
+                                        let formatter = DateFormatter()
+                                        formatter.dateFormat = "MM/dd/yyyy"
+                                        dob = formatter.string(from: newValue)
+                                    }
+                            }
+                            .frame(maxWidth: .infinity) // Ensures equal width
+                            .padding(12)
+                            .background(Color.white)
+                            .cornerRadius(8)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color.gray.opacity(0.5), lineWidth: 1)
+                            )
+                            
+                            // Age Field
+                            VStack(alignment: .leading, spacing: 5) {
+                                TextField("Age", text: $age)
+                                    .keyboardType(.numberPad)
+                            }
+                            .frame(maxWidth: .infinity) // Ensures equal width
+                            .padding(12)
+                            .background(Color.white)
+                            .cornerRadius(8)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color.gray.opacity(0.5), lineWidth: 1)
+                            )
+                        }
                     }
                 }
                 
+                // NEW: Reason for Visit Section
+                SectionCard(title: "Reason for Visit") {
+                    VStack(spacing: 12) {
+                        TextEditor(text: $reasonForVisit)
+                            .frame(height: 100)
+                            .padding(12)
+                            .background(Color.white)
+                            .cornerRadius(8)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color.gray.opacity(0.5), lineWidth: 1)
+                            )
+                    }
+                }
+                
+                // MARK: - New Or Existing Patient Section
                 SectionCard(title: "New Or Existing Patient") {
                     VStack(spacing: 12) {
                         ForEach(["New Patient", "Existing Patient"], id: \.self) { option in
                             ChoiceRow(
                                 title: option,
-                                isSelected: false
+                                isSelected: (option == "Existing Patient" && isExistingPatient) ||
+                                            (option == "New Patient" && !isExistingPatient)
                             ) {
-                                // Handle selection
+                                isExistingPatient = (option == "Existing Patient")
+                                print("Selected: \(option)")
+
                             }
                         }
                     }
                     .padding(.vertical, 8)
                 }
-
                 
                 // MARK: - Phone Number Section
                 SectionCard(title: "Phone Number") {
@@ -339,7 +463,6 @@ struct BasicInfoStepView: View {
                         }
                     }
                 }
-                
             }
             .padding(.vertical, 30)
             .padding(.horizontal)
@@ -361,10 +484,6 @@ struct BasicInfoStepView: View {
 }
 
 
-
-
-
-
 // MARK: - DemographicsStep
 struct DemographicsStep: View {
     // Existing demographic bindings
@@ -372,7 +491,31 @@ struct DemographicsStep: View {
     @Binding var selectedRace: String
     @Binding var selectedMaritalStatus: String
     @Binding var selectedEthnicity: String
+    @Binding var selectedIncome: String  // NEW: Binding for income
     
+    // Gender-related bindings
+    @Binding var isMale: Bool
+    @Binding var isFemale: Bool
+    
+    // Race-related bindings
+    @Binding var isWhite: Bool
+    @Binding var isBlack: Bool
+    @Binding var isAsian: Bool
+    @Binding var isAmIndian: Bool
+    
+    // Ethnicity-related bindings
+    @Binding var isHispanic: Bool
+    @Binding var isNonHispanic: Bool
+    
+    // Marital status-related bindings
+    @Binding var isSingle: Bool
+    @Binding var isMarried: Bool
+    @Binding var isDivorced: Bool
+    @Binding var isWidowed: Bool
+
+    @Binding var selectedFamilySize: String
+    @Binding var selectedIncomeThreshold: String
+
     // Address-related bindings
     @Binding var fullAddress: String
     @Binding var streetAddress: String
@@ -386,6 +529,13 @@ struct DemographicsStep: View {
     private let raceOptions = ["White", "Black / African American", "Asian", "American Indian"]
     private let maritalStatusOptions = ["Single", "Married", "Divorced", "Widowed"]
     private let ethnicityOptions = ["Hispanic/Latino", "Not Hispanic/Latino"]
+    private let incomeOptions = [
+        "1 Person - $2430 or Less",
+        "2 Persons - $3287 or Less",
+        "3 Persons - $4143 or Less",
+        "4 Persons - $5000 or Less",
+        "Zero - No Income"
+    ]
     
     var body: some View {
         ScrollView {
@@ -411,6 +561,14 @@ struct DemographicsStep: View {
                                 isSelected: selectedGender == option
                             ) {
                                 selectedGender = option
+                                print("Selected gender: \(selectedGender)")
+                                if selectedGender == "Male" {
+                                    isMale = true
+                                    isFemale = false
+                                } else {
+                                    isMale = false
+                                    isFemale = true
+                                }
                             }
                         }
                     }
@@ -426,6 +584,18 @@ struct DemographicsStep: View {
                                 isSelected: selectedRace == option
                             ) {
                                 selectedRace = option
+                                
+                                // Handle individual
+                                if option == "White" {
+                                    isWhite.toggle()
+                                } else if option == "Black / African American" {
+                                    isBlack.toggle()
+                                } else if option == "Asian" {
+                                    isAsian.toggle()
+                                } else if option == "American Indian" {
+                                    isAmIndian.toggle()
+                                }
+                                
                             }
                         }
                     }
@@ -442,6 +612,27 @@ struct DemographicsStep: View {
                                     isSelected: selectedMaritalStatus == option
                                 ) {
                                     selectedMaritalStatus = option
+                                    if option == "Single" {
+                                        isSingle = true
+                                        isMarried = false
+                                        isDivorced = false
+                                        isWidowed = false
+                                    } else if option == "Married" {
+                                        isSingle = false
+                                        isMarried = true
+                                        isDivorced = false
+                                        isWidowed = false
+                                    } else if option == "Divorced" {
+                                        isSingle = false
+                                        isMarried = false
+                                        isDivorced = true
+                                        isWidowed = false
+                                    } else if option == "Widowed" {
+                                        isSingle = false
+                                        isMarried = false
+                                        isDivorced = false
+                                        isWidowed = true
+                                    }
                                 }
                             }
                         }
@@ -458,7 +649,39 @@ struct DemographicsStep: View {
                                 isSelected: selectedEthnicity == option
                             ) {
                                 selectedEthnicity = option
+                                if option == "Hispanic/Latino" {
+                                    isHispanic = true
+                                    isNonHispanic = false
+                                } else {
+                                    isHispanic = false
+                                    isNonHispanic = true
+                                }
                             }
+                        }
+                    }
+                    .padding(.vertical, 8)
+                }
+                
+                // Income Section
+                SectionCard(title: "Income") {
+                    VStack(spacing: 12) {
+                        ForEach(incomeOptions, id: \.self) { option in
+                            ChoiceRow(
+                                title: option,
+                                isSelected: selectedIncome == option
+                            ) {
+                                selectedIncome = option
+                                // Split the option String into two parts separated by " - "
+                                let parts = option.components(separatedBy: " - ")
+                                if parts.count == 2 {
+                                    selectedFamilySize = parts[0].trimmingCharacters(in: .whitespaces)
+                                    selectedIncomeThreshold = parts[1].trimmingCharacters(in: .whitespaces)
+                                }
+                                print("Selected income option: \(selectedIncome)")
+                                print("Family Size: \(selectedFamilySize)")
+                                print("Income Threshold: \(selectedIncomeThreshold)")
+                            }
+
                         }
                     }
                     .padding(.vertical, 8)

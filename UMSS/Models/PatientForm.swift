@@ -21,6 +21,7 @@ struct PatientForm {
     }
     
     var dob: String = ""
+    var age: String = ""
     var phone: String = ""
     var rawAddress: String = ""
     var address: String = ""
@@ -29,11 +30,23 @@ struct PatientForm {
     var zip: String = ""
     var cityState: String = ""
     var cityStateZip: String = ""
+    
+    var isExistingPatient: Bool = false
 
     // Gender properties
     var selectedGender: String = ""
     var isMale: Bool = false
     var isFemale: Bool = false
+    
+    var selectedIncome: String = ""
+    var selectedFamilySize = ""
+    var selectedIncomeThreshold = ""
+    
+    // Marital status checkboxes
+    var isSingle: Bool = false
+    var isMarried: Bool = false
+    var isDivorced: Bool = false
+    var isWidowed: Bool = false
 
     // Race checkboxes
     var isWhite: Bool = false
@@ -51,6 +64,8 @@ struct PatientForm {
     
     // Insurance checkbox (default to "False")
     var insuredNo: Bool = false
+    
+    var reasonForVisit: String = ""
     
     // Additional fields
     var date: String = {

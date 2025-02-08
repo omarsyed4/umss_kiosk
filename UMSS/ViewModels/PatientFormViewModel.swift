@@ -67,94 +67,172 @@ class PatientFormViewModel: ObservableObject {
                 if let fieldName = annotation.fieldName {
                     switch fieldName {
                         // Text fields:
-                    case "FullName":
-                        annotation.contents = formData.fullName
+                        case "FullName":
+                            annotation.contents = formData.fullName
+                            print("FullName set to: \(formData.fullName)")
+
+                        case "DOBField":
+                            annotation.contents = formData.dob
+                            print("DOBField set to: \(formData.dob)")
+
+                        case "AddressField":
+                            annotation.contents = formData.address
+                            print("AddressField set to: \(formData.address)")
+
+                        case "CityStateZipField":
+                            annotation.contents = formData.cityStateZip
+                            print("CityStateZipField set to: \(formData.cityStateZip)")
+
+                        case "ZipField":
+                            annotation.contents = formData.zip
+                            print("ZipField set to: \(formData.zip)")
+
+                        case "EmailField":
+                            annotation.contents = formData.email
+                            print("EmailField set to: \(formData.email)")
+
+                        case "PhoneField":
+                            annotation.contents = formData.phone
+                            print("PhoneField set to: \(formData.phone)")
+
+                        case "LastNameField":
+                            annotation.contents = formData.lastName
+                            print("LastNameField set to: \(formData.lastName)")
+
+                        case "FirstNameField":
+                            annotation.contents = formData.firstName
+                            print("FirstNameField set to: \(formData.firstName)")
+
+                        case "GenderField":
+                            annotation.contents = formData.genderString
+                            print("GenderField set to: \(formData.genderString)")
                         
-                    case "DOBField":
-                        annotation.contents = formData.dob
+                        case "MaritalStatusField":
+                            annotation.contents = formData.selectedMaritalStatus
+                            print("MaritalStatusField set to: \(formData.selectedMaritalStatus)")
+
+                        case "RaceField":
+                            annotation.contents = formData.raceString
+                            print("RaceField set to: \(formData.raceString)")
+
+                        case "EthnicityField":
+                            annotation.contents = formData.ethnicityString
+                            print("EthnicityField set to: \(formData.ethnicityString)")
+
+                        case "Date_6":
+                            annotation.contents = formData.date
+                            print("Date_6 set to: \(formData.date)")
+
+                        case "Date_7":
+                            annotation.contents = formData.date
+                            print("Date_7 set to: \(formData.date)")
+
+                        case "Date_8":
+                            annotation.contents = formData.date
+                            print("Date_8 set to: \(formData.date)")
+
+                        case "Date_9":
+                            annotation.contents = formData.date
+                            print("Date_9 set to: \(formData.date)")
+
+                        case "Address_2":
+                            annotation.contents = formData.address
+                            print("Address_2 set to: \(formData.address)")
+
+                        case "FullAddress":
+                            annotation.contents = formData.rawAddress
+                            print("Address_2 set to: \(formData.rawAddress)")
+
+                        case "CityStateField":
+                            annotation.contents = formData.cityState
+                            print("CityStateField set to: \(formData.cityState)")
+
+                        case "Date":
+                            annotation.contents = formData.date
+                            print("Date field set to: \(formData.date)")
+
+                        // Gender Checkboxes
+                        case "MaleCheck":
+                            annotation.contents = (formData.isMale) ? "X" : ""
+                            print("MaleCheck set to: \(String(describing: annotation.contents))")
+                            print("Patient form isMale: \(formData.isMale)")
+
+                        case "FemaleCheck":
+                            annotation.contents = (formData.isFemale) ? "X" : ""
+                            print("FemaleCheck set to: \(String(describing: annotation.contents))")
+                            print("Patient form isFemale: \(formData.isFemale)")
                         
-                    case "AddressField":
-                        annotation.contents = formData.address
+                        case "NewPatientNo":
+                            annotation.contents = (formData.isExistingPatient) ? "X" : ""
+                            print("ExistingPatientCheck set to: \(String(describing: annotation.contents))")
 
+                        case "NewPatientYes":
+                            annotation.contents = (formData.isExistingPatient) ? "" : "X"
+                            print("NewPatientYes set to: \(String(describing: annotation.contents))")
+
+                        // Race Checkboxes
+                        case "WhiteCheck":
+                            annotation.contents = (formData.isWhite) ? "X" : ""
+                            print("WhiteCheck set to: \(String(describing: annotation.contents))")
+
+                        case "BlackCheck":
+                            annotation.contents = (formData.isBlack) ? "X" : ""
+                            print("BlackCheck set to: \(String(describing: annotation.contents))")
+
+                        case "AsianCheck":
+                            annotation.contents = (formData.isAsian) ? "X" : ""
+                            print("AsianCheck set to: \(String(describing: annotation.contents))")
+
+                        case "AmIndianCheck":
+                            annotation.contents = (formData.isAmIndian) ? "X" : ""
+                            print("AmIndianCheck set to: \(String(describing: annotation.contents))")
+
+                        // Ethnicity Checkboxes
+                        case "HispanicCheck":
+                            annotation.contents = (formData.isHispanic) ? "X" : ""
+                            print("HispanicCheck set to: \(String(describing: annotation.contents))")
+
+                        case "NonHispanicCheck":
+                            annotation.contents = (formData.isNonHispanic) ? "X" : ""
+                            print("NonHispanicCheck set to: \(String(describing: annotation.contents))")
+
+                        // Insurance / Marital Status Checkboxes
+                        case "InsuredNo":
+                            annotation.contents = (formData.insuredNo) ? "X" : ""
+                            print("InsuredNo set to: \(String(describing: annotation.contents))")
+
+                        case "MarriedYes":
+                            annotation.contents = (formData.selectedMaritalStatus == "Married") ? "X" : ""
+                            print("MarriedYes set to: \(String(describing: annotation.contents))")
+
+                        case "SingleYes":
+                            annotation.contents = (formData.selectedMaritalStatus == "Single") ? "X" : ""
+                            print("SingleYes set to: \(String(describing: annotation.contents))")
+
+                        case "SeparatedYes":
+                            annotation.contents = (formData.selectedMaritalStatus == "Separated") ? "X" : ""
+                            print("SeparatedYes set to: \(String(describing: annotation.contents))")
+
+                        case "DivorcedYes":
+                            annotation.contents = (formData.selectedMaritalStatus == "Divorced") ? "X" : ""
+                            print("DivorcedYes set to: \(String(describing: annotation.contents))")
+
+                        case "WidowedYes":
+                            annotation.contents = (formData.selectedMaritalStatus == "Widowed") ? "X" : ""
+                            print("WidowedYes set to: \(String(describing: annotation.contents))")
                         
-                    case "CityStateZipField":
-                        annotation.contents = formData.cityStateZip
-
-                    case "ZipField":
-                        annotation.contents = formData.zip
-
-                    case "EmailField":
-                        annotation.contents = formData.email
-                    
-                    case "PhoneField":
-                        annotation.contents = formData.phone
-                    
-                    case "LastNameField":
-                        annotation.contents = formData.lastName
-                    
-                    case "FirstNameField":
-                        annotation.contents = formData.firstName
-
-                    case "GenderField":
-                        annotation.contents = formData.genderString
-
-                    case "RaceField":
-                        annotation.contents = formData.raceString
-                    
-                    case "EthnicityField":
-                        annotation.contents = formData.ethnicityString
-
-                    case "Date_6":
-                        annotation.contents = formData.date
-
-                    case "Date_7":
-                        annotation.contents = formData.date
-
-                    case "Date_8":
-                        annotation.contents = formData.date
-
-                    case "Date_9":
-                        annotation.contents = formData.date
-
+                        case "ReasonForVisit":
+                            annotation.contents = formData.reasonForVisit
+                            print("ReasonForVisit set to: \(formData.reasonForVisit)")
                         
-                    case "Address_2":
-                        annotation.contents = formData.address
-                    
-                    case "CityStateField":
-                        annotation.contents = formData.cityState
-                    
-                    
-                    case "Date":
-                        annotation.contents = formData.date
+                        case "TotalIncomeField":
+                            annotation.contents = formData.selectedIncome
+                            print("IncomeField set to: \(formData.selectedIncome)")
                         
-                    // Gender Checkboxes
-                    case "MaleCheck":
-                        annotation.contents = (formData.isMale) ? "X" : ""
+                        case "FamilySizeField":
+                            annotation.contents = formData.selectedFamilySize
+                            print("FamilySizeField set to: \(formData.selectedFamilySize)")
 
-                    case "FemaleCheck":
-                        annotation.contents = (formData.isFemale) ? "X" : ""
-
-                    // Checkboxes:
-                    case "WhiteCheck":
-                        annotation.contents = (formData.isWhite) ? "X" : ""
-
-                    case "BlackCheck":
-                        annotation.contents = (formData.isBlack) ? "X" : ""
-
-                    case "AsianCheck":
-                        annotation.contents = (formData.isAsian) ? "X" : ""
-
-                    case "AmIndianCheck":
-                        annotation.contents = (formData.isAmIndian) ? "X" : ""
-
-                    case "HispanicCheck":
-                        annotation.contents = (formData.isHispanic) ? "X" : ""
-                        
-                    case "NonHispanicCheck":
-                        annotation.contents = (formData.isNonHispanic) ? "X" : ""
-                        
-                    case "InsuredNo":
-                        annotation.contents = (formData.insuredNo) ? "X" : ""
 
                     default:
                         print("[WARNING] No matching case for field: \(fieldName)")
