@@ -49,6 +49,9 @@ struct PatientForm {
     var isHispanic: Bool = false
     var isNonHispanic: Bool = false
     
+    // Insurance checkbox (default to "False")
+    var insuredNo: Bool = false
+    
     // Additional fields
     var date: String = {
         let formatter = DateFormatter()

@@ -18,144 +18,141 @@ struct ContentView: View {
     @State private var isAddressPickerPresented = false
 
     // Adjust total steps as needed
-    private var totalSteps: Int { 5 }
+    private var totalSteps: Int { 4 }
 
     var body: some View {
         NavigationView {
             ZStack {
                 Color.white.ignoresSafeArea()
 
-                VStack(spacing: 20) {
-                    // Top banner
-                    HeaderView()
-                        .padding(.bottom, 20)
-
-                    // A ZStack (or other container) for the step-by-step views
-                    ZStack {
-                        // Step 0 - "Let's Begin"
-                        if currentStep == 0 {
-                            VStack(spacing: 20) {
-                                Text("Let's Begin!")
-                                    .font(.largeTitle)
-                                    .fontWeight(.bold)
-                                    .foregroundColor(UMSSBrand.navy)
-                                Text("Welcome to the intake process.\nTap Next to get started.")
-                                    .multilineTextAlignment(.center)
-                                    .foregroundColor(.primary)
-                            }
-
-                        // Step 1 - Basic Info
-                        } else if currentStep == 1 {
-                            BasicInfoStepView(
-                                email: $viewModel.patientForm.email,
-                                firstName: $viewModel.patientForm.firstName,
-                                lastName: $viewModel.patientForm.lastName,
-                                dob: $viewModel.patientForm.dob,
-                                phone: $viewModel.patientForm.phone
-                            )
-
-                        // Step 2 - Address + City/State/Zip
-                        } else if currentStep == 2 {
-                            AddressStepView(
-                                fullAddress: $viewModel.patientForm.rawAddress,
-                                streetAddress: $viewModel.patientForm.address,
-                                city: $viewModel.patientForm.city,
-                                state: $viewModel.patientForm.state,
-                                zip: $viewModel.patientForm.zip,
-                                cityStateZip: $viewModel.patientForm.cityStateZip,
-                                isPickerPresented: $isAddressPickerPresented
-                            )
-                                                        
-
-                        // Step 3 - Gender & Race
-                        } else if currentStep == 3 {
-                            DemographicsStep(
-                                selectedGender: $viewModel.patientForm.selectedGender,
-                                selectedRace: $viewModel.patientForm.selectedRace,
-                                selectedMaritalStatus: $viewModel.patientForm.selectedMaritalStatus,
-                                selectedEthnicity: $viewModel.patientForm.selectedEthnicity
-                            )
-
-                        // Step 4 - Signature & Date
-                        } else if currentStep == 4 {
-                            SignatureStep(
-                                signatureImage: $viewModel.patientForm.signatureImage,
-                                date: $viewModel.patientForm.date
-                            )
-                        }
+                VStack(spacing: 0) {
+                    if currentStep == 0 {
+                        HeaderView()
                     }
-                    // Animate step changes
-                    .transition(
-                        .asymmetric(
-                            insertion: .move(edge: moveDirection),
-                            removal: .move(edge: moveDirection == .trailing ? .leading : .trailing)
+
+                    ScrollView {
+                        VStack(spacing: 0) {
+                            // Step 0 - "Let's Begin"
+                            if currentStep == 0 {
+                                VStack(spacing: 20) {
+                                    Text("Let's Begin!")
+                                        .font(.largeTitle)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(UMSSBrand.navy)
+                                    Text("Welcome to the intake process.\nTap Next to get started.")
+                                        .multilineTextAlignment(.center)
+                                        .foregroundColor(.primary)
+                                }
+                            }
+                            
+                            // Step 1 - Basic Info
+                            else if currentStep == 1 {
+                                BasicInfoStepView(
+                                    email: $viewModel.patientForm.email,
+                                    firstName: $viewModel.patientForm.firstName,
+                                    lastName: $viewModel.patientForm.lastName,
+                                    dob: $viewModel.patientForm.dob,
+                                    phone: $viewModel.patientForm.phone
+                                )
+                            }
+                            
+
+                            // Step 3 - Demographics
+                            else if currentStep == 2 {
+                                DemographicsStep(
+                                    selectedGender: $viewModel.patientForm.selectedGender,
+                                    selectedRace: $viewModel.patientForm.selectedRace,
+                                    selectedMaritalStatus: $viewModel.patientForm.selectedMaritalStatus,
+                                    selectedEthnicity: $viewModel.patientForm.selectedEthnicity,
+                                    fullAddress: $viewModel.patientForm.rawAddress,
+                                    streetAddress: $viewModel.patientForm.address,
+                                    city: $viewModel.patientForm.city,
+                                    state: $viewModel.patientForm.state,
+                                    zip: $viewModel.patientForm.zip,
+                                    cityStateZip: $viewModel.patientForm.cityStateZip,
+                                    isPickerPresented: $isAddressPickerPresented
+                                )
+                            }
+                            
+                            // Step 4 - Signature
+                            else if currentStep == 3 {
+                                SignatureStep(
+                                    signatureImage: $viewModel.patientForm.signatureImage
+                                )
+                            }
+                        }
+                        .padding(.horizontal, 20)
+                        .transition(
+                            .asymmetric(
+                                insertion: .move(edge: moveDirection),
+                                removal: .move(edge: moveDirection == .trailing ? .leading : .trailing)
+                            )
                         )
-                    )
-                    .animation(.easeInOut, value: currentStep)
-
-                    Spacer()
-
-                    // Navigation Buttons
-                    HStack {
-                        // Back button
-                        if currentStep > 0 {
-                            Button(action: {
-                                withAnimation {
-                                    moveDirection = .leading
-                                    currentStep -= 1
-                                }
-                            }) {
-                                Text("Back")
-                                    .font(.headline)
-                                    .foregroundColor(.white)
-                                    .padding(.vertical, 10)
-                                    .padding(.horizontal, 20)
-                                    .background(UMSSBrand.navy)
-                                    .cornerRadius(8)
-                            }
-                        }
-
-                        Spacer()
-
-                        // Next or Preview PDF button
-                        if currentStep < totalSteps - 1 {
-                            Button(action: {
-                                withAnimation {
-                                    moveDirection = .trailing
-                                    currentStep += 1
-                                }
-                            }) {
-                                Text("Next")
-                                    .font(.headline)
-                                    .foregroundColor(.white)
-                                    .padding(.vertical, 10)
-                                    .padding(.horizontal, 20)
-                                    .background(UMSSBrand.gold)
-                                    .cornerRadius(8)
-                            }
-                        } else {
-                            Button(action: {
-                                DispatchQueue.main.async {
-                                    pdfDocument = viewModel.generateFilledPDF()
-                                    showPDFPreview = true
-                                }
-                            }) {
-                                Text("Preview PDF")
-                                    .font(.headline)
-                                    .foregroundColor(.white)
-                                    .padding(.vertical, 10)
-                                    .padding(.horizontal, 20)
-                                    .background(UMSSBrand.gold)
-                                    .cornerRadius(8)
-                            }
-                        }
+                        .animation(.easeInOut, value: currentStep)
                     }
-                    .padding(.vertical, 20)
-                    .padding(.horizontal)
+                    
+                    // Sticky Navigation Buttons
+                    .safeAreaInset(edge: .bottom, spacing: 0) {
+                        HStack {
+                            // Back button
+                            if currentStep > 0 {
+                                Button(action: {
+                                    withAnimation {
+                                        moveDirection = .leading
+                                        currentStep -= 1
+                                    }
+                                }) {
+                                    Text("Back")
+                                        .font(.headline)
+                                        .foregroundColor(.white)
+                                        .padding(.vertical, 10)
+                                        .padding(.horizontal, 20)
+                                        .background(UMSSBrand.navy)
+                                        .cornerRadius(8)
+                                }
+                            }
+
+                            Spacer()
+
+                            // Next or Preview PDF button
+                            if currentStep < totalSteps - 1 {
+                                Button(action: {
+                                    withAnimation {
+                                        moveDirection = .trailing
+                                        currentStep += 1
+                                    }
+                                }) {
+                                    Text("Next")
+                                        .font(.headline)
+                                        .foregroundColor(.white)
+                                        .padding(.vertical, 10)
+                                        .padding(.horizontal, 20)
+                                        .background(UMSSBrand.gold)
+                                        .cornerRadius(8)
+                                }
+                            } else {
+                                Button(action: {
+                                    DispatchQueue.main.async {
+                                        pdfDocument = viewModel.generateFilledPDF()
+                                        showPDFPreview = true
+                                    }
+                                }) {
+                                    Text("Preview PDF")
+                                        .font(.headline)
+                                        .foregroundColor(.white)
+                                        .padding(.vertical, 10)
+                                        .padding(.horizontal, 20)
+                                        .background(UMSSBrand.gold)
+                                        .cornerRadius(8)
+                                }
+                            }
+                        }
+                        .padding()
+                        .background(Color.white.shadow(radius: 5))
+                    }
                 }
             }
             .navigationBarHidden(true)
-            // Present PDF Preview
             .sheet(isPresented: $showPDFPreview) {
                 if let pdfDocument = pdfDocument {
                     PDFPreviewView(pdfDocument: pdfDocument)
@@ -163,7 +160,6 @@ struct ContentView: View {
                     Text("Error generating PDF.")
                 }
             }
-            // Present Google Places Picker
             .sheet(isPresented: $isAddressPickerPresented) {
                 GoogleAddressAutocompleteView(
                     rawAddress: $viewModel.patientForm.rawAddress,
@@ -181,188 +177,211 @@ struct ContentView: View {
     }
 }
 
-// MARK: - Sample HeaderView
+
+// MARK: - HeaderView
 struct HeaderView: View {
     var body: some View {
         VStack(spacing: 0) {
             Image("UMSS Logo")
                 .resizable()
                 .scaledToFit()
-                .frame(width: 200, height: 200) // Adjust as needed
-            Text("Your Health Matters")
-                .font(.subheadline)
-                .foregroundColor(UMSSBrand.navy)
+                .frame(width: 400, height: 400) // Adjust as needed
         }
-        .padding(.top, 20)
+        .padding(.top, 0)
     }
 }
 
-// MARK: - StepView
-struct StepView: View {
-    let question: String
-    let placeholder: String
-    @Binding var text: String
-
-    var body: some View {
-        // Use a VStack that can center itself vertically
-        VStack(spacing: 40) {
-            
-            Text(question)
-                .font(.title)
-                .multilineTextAlignment(.center)
-
-            TextField(placeholder, text: $text)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .font(.body)
-                .multilineTextAlignment(.leading) // or .center if you prefer
-                .padding()  // Additional internal padding
-                .frame(width: 600, height: 20)  // Make the field bigger
-        }
-        // Fill the available space, then center the VStack content
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(.horizontal, 40) // Extra horizontal padding from edges
-        .padding(.vertical, 60)  // Extra vertical spacing
-    }
-}
-
-// MARK: - AddressStepView
-struct AddressStepView: View {
-    @Binding var fullAddress: String
-    
-    // Split into individual bindings
-    @Binding var streetAddress: String
-    @Binding var city: String
-    @Binding var state: String
-    @Binding var zip: String
-    
-    // Combined "City, State Zip"
-    @Binding var cityStateZip: String
-    
-    @Binding var isPickerPresented: Bool
-    @State private var previousFullAddress: String = ""
-    
-    var body: some View {
-        VStack(spacing: 20) {
-            Text("What is your address?")
-                .font(.title)
-                .multilineTextAlignment(.center)
-            
-            Button(action: {
-                isPickerPresented = true
-                print("Picker presented")
-            }) {
-                if fullAddress.isEmpty {
-                    Text("Tap to select your address")
-                        .foregroundColor(.blue)
-                        .underline()
-                } else {
-                    VStack {
-                        Text("Selected Address:")
-                            .font(.caption)
-                            .foregroundColor(.gray)
-                        Text(fullAddress)
-                            .font(.body)
-                            .multilineTextAlignment(.center)
-                            .padding()
-                            .background(Color(.systemGray6))
-                            .cornerRadius(8)
-                    }
-                }
-            }
-        }
-        .onAppear {
-            print("onAppear called")
-        }
-        .onChange(of: fullAddress) { newValue in
-            print("onChange called with new value: \(newValue)")
-            
-        }
-    }
-}
 
 
 // MARK: - BasicInfoStepView
 struct BasicInfoStepView: View {
+    // Basic Information Bindings
     @Binding var email: String
     @Binding var firstName: String
     @Binding var lastName: String
     @Binding var dob: String
     @Binding var phone: String
-
     @State private var selectedDate: Date = Date()
     
-    var body: some View {
-        VStack(spacing: 20) {
-            Text("Basic Information")
-                .font(.largeTitle)
-                .fontWeight(.bold)
-                .foregroundColor(.primary)
-                .padding(.bottom, 10)
-
-            VStack(spacing: 15) {
-                CustomTextField(icon: "envelope", placeholder: "Email", text: $email, keyboardType: .emailAddress)
-                CustomTextField(icon: "person", placeholder: "First Name", text: $firstName, keyboardType: .default)
-                CustomTextField(icon: "person", placeholder: "Last Name", text: $lastName, keyboardType: .default)
-                
-                // Date Picker for DOB
-                VStack(alignment: .leading, spacing: 5) {
-                    Text("Date of Birth")
-                        .font(.headline)
-                        .foregroundColor(.secondary)
-                    DatePicker("Select Date", selection: $selectedDate, displayedComponents: .date)
-                        .datePickerStyle(CompactDatePickerStyle())
-                        .labelsHidden()
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .onChange(of: selectedDate) { newValue in
-                            let formatter = DateFormatter()
-                            formatter.dateFormat = "MM/dd/yyyy"
-                            dob = formatter.string(from: newValue)
-                        }
-                }
-                .padding()
-                .background(RoundedRectangle(cornerRadius: 10).fill(Color(.systemGray6)))
-                
-                CustomTextField(icon: "phone", placeholder: "Phone Number", text: $phone, keyboardType: .phonePad)
-            }
-            .padding(.horizontal, 25)
-            
-            Spacer()
-        }
-        .padding(.vertical, 40)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.systemGroupedBackground).edgesIgnoringSafeArea(.all))
-    }
-}
-
-// MARK: - Custom TextField with Icons
-struct CustomTextField: View {
-    var icon: String
-    var placeholder: String
-    @Binding var text: String
-    var keyboardType: UIKeyboardType
+    
+    // Custom Number Pad Layout for Phone Entry
+    private let numberPadButtons: [[String]] = [
+        ["1", "2", "3"],
+        ["4", "5", "6"],
+        ["7", "8", "9"],
+        ["Clear", "0", "Delete"]
+    ]
+    
     
     var body: some View {
-        HStack {
-            Image(systemName: icon)
-                .foregroundColor(.gray)
-                .frame(width: 20)
-            
-            TextField(placeholder, text: $text)
-                .keyboardType(keyboardType)
-                .padding(.vertical, 10)
+        ScrollView {
+            VStack(spacing: 30) {
+                // Header
+                VStack(spacing: 8) {
+                    Text("Basic Information")
+                        .font(.title2)
+                        .fontWeight(.semibold)
+                    
+                    Text("Please provide your basic details")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+                .padding(.vertical, 20)
+                
+                // MARK: - Basic Information Section
+                SectionCard(title: "Basic Information") {
+                    VStack(spacing: 20) {
+                        // Email Field with Domain Buttons
+                        HStack(spacing: 10) {
+                            TextField("Email", text: $email)
+                                .keyboardType(.emailAddress)
+                                .padding(12)
+                                .background(Color.white)
+                                .cornerRadius(8)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(Color.gray.opacity(0.5), lineWidth: 1)
+                                )
+                        }
+                        
+                        // First and Last Name Fields
+                        HStack(spacing: 10) {
+                            TextField("First Name", text: $firstName)
+                                .padding(12)
+                                .background(Color.white)
+                                .cornerRadius(8)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(Color.gray.opacity(0.5), lineWidth: 1)
+                                )
+                            
+                            TextField("Last Name", text: $lastName)
+                                .padding(12)
+                                .background(Color.white)
+                                .cornerRadius(8)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(Color.gray.opacity(0.5), lineWidth: 1)
+                                )
+                        }
+                        
+                        // Date of Birth Picker
+                        VStack(alignment: .leading, spacing: 5) {
+                            Text("Date of Birth")
+                                .font(.headline)
+                                .foregroundColor(.secondary)
+                            DatePicker("", selection: $selectedDate, displayedComponents: .date)
+                                .datePickerStyle(CompactDatePickerStyle())
+                                .labelsHidden()
+                                .onChange(of: selectedDate) { newValue in
+                                    let formatter = DateFormatter()
+                                    formatter.dateFormat = "MM/dd/yyyy"
+                                    dob = formatter.string(from: newValue)
+                                }
+                        }
+                        .padding(12)
+                        .background(Color.white)
+                        .cornerRadius(8)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.gray.opacity(0.5), lineWidth: 1)
+                        )
+                    }
+                }
+                
+                SectionCard(title: "New Or Existing Patient") {
+                    VStack(spacing: 12) {
+                        ForEach(["New Patient", "Existing Patient"], id: \.self) { option in
+                            ChoiceRow(
+                                title: option,
+                                isSelected: false
+                            ) {
+                                // Handle selection
+                            }
+                        }
+                    }
+                    .padding(.vertical, 8)
+                }
+
+                
+                // MARK: - Phone Number Section
+                SectionCard(title: "Phone Number") {
+                    VStack(spacing: 20) {
+                        // Display the Entered Phone Number
+                        Text(phone)
+                            .font(.title)
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .background(Color.white)
+                            .cornerRadius(8)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color.gray.opacity(0.5), lineWidth: 1)
+                            )
+                        
+                        // Custom Number Pad Grid
+                        VStack(spacing: 15) {
+                            ForEach(numberPadButtons, id: \.self) { row in
+                                HStack(spacing: 15) {
+                                    ForEach(row, id: \.self) { button in
+                                        Button(action: {
+                                            handleButtonPress(button)
+                                        }) {
+                                            Text(button)
+                                                .font(.title2)
+                                                .frame(width: 80, height: 80)
+                                                .background(Color(.systemGray5))
+                                                .cornerRadius(12)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+            }
+            .padding(.vertical, 30)
+            .padding(.horizontal)
         }
-        .padding(.horizontal, 15)
-        .background(RoundedRectangle(cornerRadius: 10).fill(Color(.systemGray6)))
+        .background(Color(.systemGroupedBackground).ignoresSafeArea())
+    }
+    
+    // MARK: - Custom Number Pad Handler
+    private func handleButtonPress(_ input: String) {
+        switch input {
+        case "Clear":
+            phone = ""
+        case "Delete":
+            if !phone.isEmpty { phone.removeLast() }
+        default:
+            phone.append(input)
+        }
     }
 }
+
+
+
+
+
 
 // MARK: - DemographicsStep
 struct DemographicsStep: View {
+    // Existing demographic bindings
     @Binding var selectedGender: String
     @Binding var selectedRace: String
     @Binding var selectedMaritalStatus: String
     @Binding var selectedEthnicity: String
     
+    // Address-related bindings
+    @Binding var fullAddress: String
+    @Binding var streetAddress: String
+    @Binding var city: String
+    @Binding var state: String
+    @Binding var zip: String
+    @Binding var cityStateZip: String
+    @Binding var isPickerPresented: Bool
+
     private let genderOptions = ["Male", "Female"]
     private let raceOptions = ["White", "Black / African American", "Asian", "American Indian"]
     private let maritalStatusOptions = ["Single", "Married", "Divorced", "Widowed"]
@@ -445,6 +464,49 @@ struct DemographicsStep: View {
                     .padding(.vertical, 8)
                 }
                 
+                // Address Section (integrated widget)
+                SectionCard(title: "Address") {
+                    Button(action: {
+                        isPickerPresented = true
+                        print("Address picker presented")
+                    }) {
+                        HStack(spacing: 15) {
+                            Image(systemName: "mappin.and.ellipse")
+                                .foregroundColor(.blue)
+                                .font(.title2)
+                            
+                            VStack(alignment: .leading, spacing: 5) {
+                                if fullAddress.isEmpty {
+                                    Text("Tap to select your address")
+                                        .font(.body)
+                                        .foregroundColor(.blue)
+                                        .underline()
+                                } else {
+                                    Text("Selected Address:")
+                                        .font(.caption)
+                                        .foregroundColor(.gray)
+                                    Text(fullAddress)
+                                        .font(.body)
+                                        .foregroundColor(.primary)
+                                        .multilineTextAlignment(.leading)
+                                }
+                            }
+                            
+                            Spacer()
+                        }
+                        .padding()
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color(.systemGray6))
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.blue.opacity(0.7), lineWidth: 1)
+                        )
+                        .animation(.easeInOut, value: fullAddress)
+                    }
+                }
+                
                 Spacer()
             }
             .padding(.horizontal)
@@ -452,6 +514,9 @@ struct DemographicsStep: View {
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
     }
 }
+
+
+
 
 // Reusable Section Card
 struct SectionCard<Content: View>: View {
@@ -540,75 +605,140 @@ struct ChoiceRow: View {
 }
 
 
-
 // MARK: - SignatureCanvasView
 /// A SwiftUI wrapper around PencilKit's PKCanvasView.
 struct SignatureCanvasView: UIViewRepresentable {
     @Binding var canvasView: PKCanvasView
     
-    func makeUIView(context: Context) -> PKCanvasView {
-        // Configure the PKCanvasView
-        canvasView.drawingPolicy = .anyInput  // allows finger + Apple Pencil
+    func makeUIView(context: Context) -> UIView {
+        // Create a container view for the canvas + guidelines
+        let containerView = UIView()
+        containerView.backgroundColor = .white
+        containerView.layer.borderColor = UIColor.lightGray.cgColor
+        containerView.layer.borderWidth = 1.0
+        containerView.layer.cornerRadius = 8.0
+        
+        // Add the PKCanvasView as a subview
+        canvasView.backgroundColor = .clear
+        canvasView.drawingPolicy = .anyInput
         canvasView.tool = PKInkingTool(.pen, color: .black, width: 5)
-        canvasView.backgroundColor = .white
-        return canvasView
+        canvasView.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(canvasView)
+        
+        // Add constraints to fill the container
+        NSLayoutConstraint.activate([
+            canvasView.topAnchor.constraint(equalTo: containerView.topAnchor),
+            canvasView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
+            canvasView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+            canvasView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor)
+        ])
+        
+        // Add dashed line (repositioned in updateUIView)
+        let dashedLineLayer = CAShapeLayer()
+        dashedLineLayer.strokeColor = UIColor.gray.cgColor
+        dashedLineLayer.lineWidth = 1.0
+        dashedLineLayer.lineDashPattern = [4, 4]
+        containerView.layer.addSublayer(dashedLineLayer)
+        context.coordinator.dashedLineLayer = dashedLineLayer
+        
+        return containerView
     }
     
-    func updateUIView(_ uiView: PKCanvasView, context: Context) {
-        // Called when SwiftUI updates the view (e.g., state changes).
-        // Usually no action needed unless we want to reconfigure the canvas.
+    func updateUIView(_ containerView: UIView, context: Context) {
+        // Update dashed line position whenever the container's bounds change
+        guard let dashedLine = context.coordinator.dashedLineLayer else { return }
+        let yPosition = containerView.bounds.height - 40 // Place near bottom
+        let path = UIBezierPath()
+        path.move(to: CGPoint(x: 20, y: yPosition))
+        path.addLine(to: CGPoint(x: containerView.bounds.width - 20, y: yPosition))
+        dashedLine.path = path.cgPath
+    }
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator()
+    }
+    
+    class Coordinator {
+        var dashedLineLayer: CAShapeLayer?
     }
 }
-
 // MARK: - SignatureStep
 struct SignatureStep: View {
-    /// Holds the user's signature image (if we want to store it as an image).
+    /// Holds the user's signature image.
     @Binding var signatureImage: UIImage?
     
-    /// We could still keep a date if needed:
-    @Binding var date: String
+    // We are removing the date text field per your request, so no `date` binding is needed.
     
     /// The PencilKit canvas
     @State private var canvasView = PKCanvasView()
     
     var body: some View {
-        VStack(spacing: 30) {
-            Text("Signature")
-                .font(.title)
-            
-            // The PencilKit wrapper
-            SignatureCanvasView(canvasView: $canvasView)
-                .frame(height: 300)
-                .background(Color.gray.opacity(0.1))
-                .cornerRadius(8)
-            
-            // OPTIONAL: A date field
-            TextField("Date (MM/DD/YYYY)", text: $date)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .padding(.horizontal, 100)
-            
-            // Buttons to handle the drawing
-            HStack {
-                Button("Clear") {
-                    // Clears the canvas
-                    canvasView.drawing = PKDrawing()
+        ScrollView {
+            VStack(spacing: 20) {
+                Text("DISCLAIMER OF MEDICAL INFORMATION AUTHORIZATION")
+                    .font(.headline)
+                // Disclaimers / Authorization Text
+                Text("I have read and understand the Alert for Electronic Communications and agree that e-mail messages may include protected health information about me / the patient whenever necessary.\n\nMy signature on this Authorization indicates that I am giving permission for the uses and disclosures of the protected health information described above. The facility, its employees, officers, and physicians are hereby released from any legal responsibility or liability for disclosures of the above information to the extent indicated and authorized herein.\n\nI understand this authorization may be revoked in writing at any time, except to the extent that action has been taken in reliance on this authorization. Unless otherwise revoked in writing, this authorization will expire 1 year from the date of execution. A photocopy or FAX of this document is valid as the original.\n\nLIABILITY WAIVER: This liability waiver is a LEGAL DOCUMENT. This liability waiver is a “catch all”. By signing this waiver, you or your representative acknowledge that you or your representative WILL NOT seek civil or federal penalties or compensation in any court in the event of injury or death incurred while in the facility/facility premises against the aforementioned owner / tenant of the facility.\n\nTo the best of my knowledge the above information is complete and accurate.")
+                    .font(.subheadline)
+                    .foregroundColor(.primary)
+                    .padding(.horizontal)
+                
+                // Acknowledgement Section
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("ACKNOWLEDGEMENT AND AUTHORIZATION:")
+                        .font(.headline)
+                    Text(" - I have read and understand the HIPAA/Privacy Policy for United Medical and Social Services Clinic")
+                    Text(" - I authorize United Medical and Social Services Clinic to obtain/have access to my medication history")
+                    Text(" - I authorize my provider’s office to contact me by my mobile phone")
                 }
+                .font(.subheadline)
+                .foregroundColor(.primary)
                 .padding(.horizontal)
                 
-                Button("Save Signature") {
-                    // Extract an image from the drawing
-                    let image = canvasView.drawing
-                        .image(from: canvasView.bounds, scale: 1.0)
+                Divider().padding(.vertical, 10)
+                
+                Text("Signature")
+                    .font(.title2)
+                    .fontWeight(.semibold)
+                
+                // The PencilKit wrapper
+                SignatureCanvasView(canvasView: $canvasView)
+                    .frame(height: 300)
+                    .background(Color.gray.opacity(0.1))
+                    .cornerRadius(8)
+                    .padding(.horizontal)
+                
+                // Buttons to handle the drawing
+                HStack(spacing: 40) {
+                    Button("Clear") {
+                        // Clears the canvas
+                        canvasView.drawing = PKDrawing()
+                    }
+                    .padding(.vertical, 8)
+                    .padding(.horizontal, 16)
+                    .background(Color.red.opacity(0.1))
+                    .foregroundColor(.red)
+                    .cornerRadius(8)
                     
-                    // Store the image in your binding
-                    signatureImage = image
+                    Button("Save Signature") {
+                        // Extract an image from the drawing
+                        let image = canvasView.drawing
+                            .image(from: canvasView.bounds, scale: 1.0)
+                        
+                        // Store the image in your binding
+                        signatureImage = image
+                    }
+                    .padding(.vertical, 8)
+                    .padding(.horizontal, 16)
+                    .background(Color.blue.opacity(0.1))
+                    .foregroundColor(.blue)
+                    .cornerRadius(8)
                 }
-                .padding(.horizontal)
+                .padding(.bottom, 30)
             }
+            .padding(.top, 20)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(.vertical, 40)
+        .frame(maxWidth: .infinity)
+        .background(Color.white.ignoresSafeArea())
     }
 }
-
-

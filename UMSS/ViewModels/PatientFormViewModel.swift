@@ -68,122 +68,93 @@ class PatientFormViewModel: ObservableObject {
                     switch fieldName {
                         // Text fields:
                     case "FullName":
-                        print("[DEBUG] Found \"FullName\". Setting to: \(formData.fullName)")
                         annotation.contents = formData.fullName
                         
                     case "DOBField":
-                        print("[DEBUG] Found \"DOBField\". Setting to: \(formData.dob)")
                         annotation.contents = formData.dob
                         
                     case "AddressField":
-                        print("[DEBUG] Found \"AddressField\". Setting to: \(formData.address)")
                         annotation.contents = formData.address
-                        print("Address: \(formData.address)")
-                        print("City: \(formData.city)")
-                        print("State: \(formData.state)")
-                        print("Zip: \(formData.zip)")
-                        print("City/State/Zip: \(formData.cityStateZip)")
 
                         
                     case "CityStateZipField":
-                        print("[DEBUG] Found \"CityStateZipField\". Setting to: \(formData.cityStateZip)")
                         annotation.contents = formData.cityStateZip
 
                     case "ZipField":
-                        print("[DEBUG] Found \"ZipField\". Setting to: \(formData.zip)")
                         annotation.contents = formData.zip
 
                     case "EmailField":
-                        print("[DEBUG] Found \"EmailField\". Setting to: \(formData.email)")
                         annotation.contents = formData.email
                     
                     case "PhoneField":
-                        print("[DEBUG] Found \"PhoneField\". Setting to: \(formData.phone)")
                         annotation.contents = formData.phone
                     
                     case "LastNameField":
-                        print("[DEBUG] Found \"LastNameField\". Setting to: \(formData.lastName)")
                         annotation.contents = formData.lastName
                     
                     case "FirstNameField":
-                        print("[DEBUG] Found \"FirstNameField\". Setting to: \(formData.firstName)")
                         annotation.contents = formData.firstName
 
                     case "GenderField":
-                        print("[DEBUG] Found \"GenderField\". Setting to: \(formData.genderString)")
                         annotation.contents = formData.genderString
 
                     case "RaceField":
-                        print("[DEBUG] Found \"RaceField\". Setting to: \(formData.raceString)")
                         annotation.contents = formData.raceString
                     
                     case "EthnicityField":
-                        print("[DEBUG] Found \"EthnicityField\". Setting to: \(formData.ethnicityString)")
                         annotation.contents = formData.ethnicityString
 
                     case "Date_6":
-                        print("[DEBUG] Found \"Date\". Setting to: \(formData.date)")
                         annotation.contents = formData.date
 
                     case "Date_7":
-                        print("[DEBUG] Found \"Date\". Setting to: \(formData.date)")
                         annotation.contents = formData.date
 
                     case "Date_8":
-                        print("[DEBUG] Found \"Date\". Setting to: \(formData.date)")
                         annotation.contents = formData.date
 
                     case "Date_9":
-                        print("[DEBUG] Found \"Date\". Setting to: \(formData.date)")
                         annotation.contents = formData.date
 
                         
                     case "Address_2":
-                        print("[DEBUG] Found \"Address\". Setting to: \(formData.address)")
                         annotation.contents = formData.address
                     
                     case "CityStateField":
-                        print("[DEBUG] Found \"CityStateField\". Setting to: \(formData.cityState)")
                         annotation.contents = formData.cityState
                     
                     
                     case "Date":
-                        print("[DEBUG] Found \"Date\". Setting to: \(formData.date)")
                         annotation.contents = formData.date
                         
                     // Gender Checkboxes
                     case "MaleCheck":
                         annotation.contents = (formData.isMale) ? "X" : ""
-                        print("[DEBUG] \"MaleCheck\" => \(annotation.contents ?? "Off")")
 
                     case "FemaleCheck":
                         annotation.contents = (formData.isFemale) ? "X" : ""
-                        print("[DEBUG] \"FemaleCheck\" => \(annotation.contents ?? "Off")")
 
                     // Checkboxes:
                     case "WhiteCheck":
                         annotation.contents = (formData.isWhite) ? "X" : ""
-                        print("[DEBUG] \"WhiteCheck\" => \(annotation.contents ?? "Off")")
 
                     case "BlackCheck":
                         annotation.contents = (formData.isBlack) ? "X" : ""
-                        print("[DEBUG] \"BlackCheck\" => \(annotation.contents ?? "Off")")
 
                     case "AsianCheck":
                         annotation.contents = (formData.isAsian) ? "X" : ""
-                        print("[DEBUG] \"AsianCheck\" => \(annotation.contents ?? "Off")")
 
                     case "AmIndianCheck":
                         annotation.contents = (formData.isAmIndian) ? "X" : ""
-                        print("[DEBUG] \"AmIndianCheck\" => \(annotation.contents ?? "Off")")
 
                     case "HispanicCheck":
                         annotation.contents = (formData.isHispanic) ? "X" : ""
-                        print("[DEBUG] \"HispanicCheck\" => \(annotation.contents ?? "Off")")
                         
                     case "NonHispanicCheck":
                         annotation.contents = (formData.isNonHispanic) ? "X" : ""
-                        print("[DEBUG] \"HispanicCheck\" => \(annotation.contents ?? "Off")")
+                        
+                    case "InsuredNo":
+                        annotation.contents = (formData.insuredNo) ? "X" : ""
 
                     default:
                         print("[WARNING] No matching case for field: \(fieldName)")
