@@ -8,6 +8,7 @@ struct GoogleAddressAutocompleteView: UIViewControllerRepresentable {
     @Binding var city: String
     @Binding var state: String
     @Binding var zip: String
+    @Binding var cityState: String         // Combined "City, State
     @Binding var cityStateZip: String       // Combined "City, State ZIP"
     
     @Binding var isPresented: Bool
@@ -81,8 +82,10 @@ struct GoogleAddressAutocompleteView: UIViewControllerRepresentable {
                 // Build the combined "City, State ZIP" string.
                 if !city.isEmpty && !state.isEmpty && !postalCode.isEmpty {
                     parent.cityStateZip = "\(city), \(state) \(postalCode)"
+                    parent.cityState = "\(city), \(state)"
                 } else if !city.isEmpty && !state.isEmpty {
                     parent.cityStateZip = "\(city), \(state)"
+                    parent.cityState = "\(city), \(state)"
                 } else {
                     parent.cityStateZip = ""
                 }

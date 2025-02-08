@@ -88,7 +88,11 @@ class PatientFormViewModel: ObservableObject {
                     case "CityStateZipField":
                         print("[DEBUG] Found \"CityStateZipField\". Setting to: \(formData.cityStateZip)")
                         annotation.contents = formData.cityStateZip
-                    
+
+                    case "ZipField":
+                        print("[DEBUG] Found \"ZipField\". Setting to: \(formData.zip)")
+                        annotation.contents = formData.zip
+
                     case "EmailField":
                         print("[DEBUG] Found \"EmailField\". Setting to: \(formData.email)")
                         annotation.contents = formData.email
@@ -104,7 +108,19 @@ class PatientFormViewModel: ObservableObject {
                     case "FirstNameField":
                         print("[DEBUG] Found \"FirstNameField\". Setting to: \(formData.firstName)")
                         annotation.contents = formData.firstName
+
+                    case "GenderField":
+                        print("[DEBUG] Found \"GenderField\". Setting to: \(formData.genderString)")
+                        annotation.contents = formData.genderString
+
+                    case "RaceField":
+                        print("[DEBUG] Found \"RaceField\". Setting to: \(formData.raceString)")
+                        annotation.contents = formData.raceString
                     
+                    case "EthnicityField":
+                        print("[DEBUG] Found \"EthnicityField\". Setting to: \(formData.ethnicityString)")
+                        annotation.contents = formData.ethnicityString
+
                     case "Date_6":
                         print("[DEBUG] Found \"Date\". Setting to: \(formData.date)")
                         annotation.contents = formData.date
@@ -122,10 +138,15 @@ class PatientFormViewModel: ObservableObject {
                         annotation.contents = formData.date
 
                         
-                    case "PhoneField":
-                        print("[DEBUG] Found \"PhoneField\". Setting to: \(formData.phone)")
-                        annotation.contents = formData.phone
-                        
+                    case "Address_2":
+                        print("[DEBUG] Found \"Address\". Setting to: \(formData.address)")
+                        annotation.contents = formData.address
+                    
+                    case "CityStateField":
+                        print("[DEBUG] Found \"CityStateField\". Setting to: \(formData.cityState)")
+                        annotation.contents = formData.cityState
+                    
+                    
                     case "Date":
                         print("[DEBUG] Found \"Date\". Setting to: \(formData.date)")
                         annotation.contents = formData.date
@@ -192,7 +213,7 @@ class PatientFormViewModel: ObservableObject {
             1: [CGRect(x: 105, y: 500, width: 100, height: 25)],
             2: [CGRect(x: 80, y: 70, width: 100, height: 25)],
             3: [
-                CGRect(x: 215, y: 340, width: 100, height: 25),
+                CGRect(x: 220, y: 350, width: 100, height: 25),
                 CGRect(x: 105, y: 210, width: 100, height: 25),
                 CGRect(x: 105, y: 135, width: 100, height: 25),
                 CGRect(x: 105, y: 87, width: 100, height: 25),
