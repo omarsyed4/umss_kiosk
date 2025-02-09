@@ -1,2 +1,4 @@
 # Secrets file containing API keys
 Secrets.plist
+Info.plist
+ServiceAccount.json
