@@ -10,28 +10,27 @@ import PDFKit
 
 struct PDFPreviewView: View {
     let pdfDocument: PDFDocument
-    
-    init(pdfDocument: PDFDocument) {
-        self.pdfDocument = pdfDocument
-        print("[DEBUG] PDFPreviewView initialized with page count: \(pdfDocument.pageCount)")
-    }
-    
+    var onUpload: (() -> Void)? = nil
     
     var body: some View {
-        NavigationView {
-            PDFKitRepresentedView(pdfDocument: pdfDocument)
+        VStack {
+            PDFKitView(document: pdfDocument)
                 .edgesIgnoringSafeArea(.all)
-                .navigationBarTitle("PDF Preview", displayMode: .inline)
-                .navigationBarItems(trailing: Button(action: {
-                    printPDF()
-                }) {
-                    Image(systemName: "printer")
-                })
             
+            HStack {
+                Button("Print") {
+                    // Implement print functionality if desired.
+                }
+                Spacer()
+                Button("Upload") {
+                    onUpload?()
+                }
+            }
+            .padding()
         }
     }
-        
-        
+
+
         
 private func printPDF() {
     guard let pdfData = pdfDocument.dataRepresentation() else {
@@ -55,4 +54,5 @@ private func printPDF() {
     }
 }
 }
+
 

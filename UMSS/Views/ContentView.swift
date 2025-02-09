@@ -10,22 +10,32 @@ import PDFKit
 import PencilKit
 
 struct ContentView: View {
+    // Navigation and form state
+    @State private var currentStep: Int = 0
+    @State private var moveDirection: Edge = .trailing
+    @State private var isAddressPickerPresented = false
+    
+    // Your patient form view model and PDF state
     @StateObject private var viewModel = PatientFormViewModel()
     @State private var showPDFPreview = false
     @State private var isGeneratingPDF = false
     @State private var pdfDocument: PDFDocument?
-    @State private var currentStep: Int = 0
-    @State private var moveDirection: Edge = .trailing
-    @State private var isAddressPickerPresented = false
-
-    // Adjust total steps as needed
+    
+    // Upload service state
+    @State private var accessToken: String?
+    @State private var uploadStatus: String = ""
+    
+    // Folder ID for your target folder on Drive
+    let folderID = "1Inh9cxzOUzsN_vTtDSl-cEK6UVB2V7Sa"
+    
+    // Total steps (adjust as needed)
     private var totalSteps: Int { 4 }
-
+    
     var body: some View {
         NavigationView {
             ZStack {
                 Color.white.ignoresSafeArea()
-
+                
                 VStack(spacing: 0) {
                     if currentStep == 0 {
                         HeaderView()
@@ -33,7 +43,7 @@ struct ContentView: View {
                     
                     ScrollView {
                         VStack(spacing: 0) {
-                            // Step 0 - "Let's Begin"
+                            // Step 0 – “Let’s Begin”
                             if currentStep == 0 {
                                 VStack(spacing: 20) {
                                     Text("Let's Begin!")
@@ -45,8 +55,7 @@ struct ContentView: View {
                                         .foregroundColor(.primary)
                                 }
                             }
-                            
-                            // Step 1 - Basic Info
+                            // Step 1 – Basic Info
                             else if currentStep == 1 {
                                 BasicInfoStepView(
                                     email: $viewModel.patientForm.email,
@@ -59,9 +68,7 @@ struct ContentView: View {
                                     isExistingPatient: $viewModel.patientForm.isExistingPatient
                                 )
                             }
-                            
-                            
-                            // Step 3 - Demographics
+                            // Step 2 – Demographics
                             else if currentStep == 2 {
                                 DemographicsStep(
                                     selectedGender: $viewModel.patientForm.selectedGender,
@@ -92,8 +99,7 @@ struct ContentView: View {
                                     isPickerPresented: $isAddressPickerPresented
                                 )
                             }
-                            
-                            // Step 4 - Signature
+                            // Step 3 – Signature
                             else if currentStep == 3 {
                                 SignatureStep(
                                     signatureImage: $viewModel.patientForm.signatureImage
@@ -113,7 +119,6 @@ struct ContentView: View {
                     // Sticky Navigation Buttons
                     .safeAreaInset(edge: .bottom, spacing: 0) {
                         HStack {
-                            // Back button
                             if currentStep > 0 {
                                 Button(action: {
                                     withAnimation {
@@ -133,7 +138,6 @@ struct ContentView: View {
                             
                             Spacer()
                             
-                            // Next or Preview PDF button
                             if currentStep < totalSteps - 1 {
                                 Button(action: {
                                     withAnimation {
@@ -152,11 +156,15 @@ struct ContentView: View {
                             } else {
                                 Button(action: {
                                     isGeneratingPDF = true
-                                    let generatedPDF = viewModel.generateFilledPDF()
-                                    DispatchQueue.main.async {
-                                        pdfDocument = generatedPDF
-                                        isGeneratingPDF = false
-                                        showPDFPreview = true
+                                    if accessToken == nil {
+                                        getAccessToken { token in
+                                            DispatchQueue.main.async {
+                                                self.accessToken = token
+                                                self.generateAndShowPDF()
+                                            }
+                                        }
+                                    } else {
+                                        generateAndShowPDF()
                                     }
                                 }) {
                                     if isGeneratingPDF {
@@ -171,6 +179,10 @@ struct ContentView: View {
                                             .cornerRadius(8)
                                     }
                                 }
+                                
+                                Text(uploadStatus)
+                                    .foregroundColor(.blue)
+                                    .padding()
                             }
                         }
                         .padding(.horizontal, 20)
@@ -182,10 +194,40 @@ struct ContentView: View {
             }
             .navigationBarHidden(true)
             .sheet(isPresented: $showPDFPreview) {
-                if let pdfDocument = pdfDocument {
-                    PDFPreviewView(pdfDocument: pdfDocument)
-                } else {
-                    Text("Error generating PDF.")
+                Group {
+                    if let pdfDocument = pdfDocument {
+                        PDFPreviewView(pdfDocument: pdfDocument, onUpload: {
+                            // Write the PDF to a temporary URL and upload it.
+                            guard let pdfData = pdfDocument.dataRepresentation() else {
+                                uploadStatus = "Failed to get PDF data."
+                                return
+                            }
+                            let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent("GeneratedPDF.pdf")
+                            do {
+                                try pdfData.write(to: tempURL)
+                            } catch {
+                                uploadStatus = "Failed to write PDF to temporary file: \(error.localizedDescription)"
+                                return
+                            }
+                            guard let token = accessToken else {
+                                uploadStatus = "No access token available."
+                                return
+                            }
+                            uploadStatus = "Uploading PDF..."
+                            uploadFileToDrive(fileURL: tempURL, accessToken: token, folderID: folderID) { result in
+                                DispatchQueue.main.async {
+                                    switch result {
+                                    case .success(let fileID):
+                                        uploadStatus = "Upload successful. File ID: \(fileID)"
+                                    case .failure(let error):
+                                        uploadStatus = "Upload error: \(error)"
+                                    }
+                                }
+                            }
+                        })
+                    } else {
+                        Text("Error generating PDF.")
+                    }
                 }
             }
             .sheet(isPresented: $isAddressPickerPresented) {
@@ -202,6 +244,122 @@ struct ContentView: View {
             }
         }
         .navigationViewStyle(StackNavigationViewStyle())
+    }
+    
+    // MARK: - Navigation Button Subview
+    @ViewBuilder
+    private func safeAreaInsetView() -> some View {
+        HStack {
+            if currentStep > 0 {
+                Button(action: {
+                    withAnimation {
+                        moveDirection = .leading
+                        currentStep -= 1
+                    }
+                }) {
+                    Text("Back")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .padding(.vertical, 10)
+                        .padding(.horizontal, 20)
+                        .background(UMSSBrand.navy)
+                        .cornerRadius(8)
+                }
+            }
+            Spacer()
+            if currentStep < totalSteps - 1 {
+                Button(action: {
+                    withAnimation {
+                        moveDirection = .trailing
+                        currentStep += 1
+                    }
+                }) {
+                    Text("Next")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .padding(.vertical, 10)
+                        .padding(.horizontal, 20)
+                        .background(UMSSBrand.gold)
+                        .cornerRadius(8)
+                }
+            } else {
+                Button(action: previewPDFAction) {
+                    if isGeneratingPDF {
+                        ProgressView()
+                    } else {
+                        Text("Preview PDF")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .padding(.vertical, 10)
+                            .padding(.horizontal, 20)
+                    }
+                }
+                .background(UMSSBrand.gold)
+                .cornerRadius(8)
+                
+                Text(uploadStatus)
+                    .foregroundColor(.blue)
+                    .padding()
+            }
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 10)
+        .background(Color.white)
+        .shadow(color: Color.black.opacity(0.2), radius: 5, x: 0, y: -2)
+    }
+    
+    // MARK: - PDF Preview and Upload Actions
+    private func previewPDFAction() {
+        isGeneratingPDF = true
+        if accessToken == nil {
+            getAccessToken { token in
+                DispatchQueue.main.async {
+                    self.accessToken = token
+                    self.generateAndShowPDF()
+                }
+            }
+        } else {
+            generateAndShowPDF()
+        }
+    }
+    
+    private func generateAndShowPDF() {
+        // Generate the PDF using your view model.
+        let generatedPDF = viewModel.generateFilledPDF()
+        self.pdfDocument = generatedPDF
+        isGeneratingPDF = false
+        showPDFPreview = true
+    }
+    
+    // Called from PDFPreviewView when the user taps Upload.
+    private func handleUpload() {
+        guard let pdfDocument = pdfDocument,
+              let pdfData = pdfDocument.dataRepresentation() else {
+            uploadStatus = "Failed to get PDF data."
+            return
+        }
+        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent("GeneratedPDF.pdf")
+        do {
+            try pdfData.write(to: tempURL)
+        } catch {
+            uploadStatus = "Failed to write PDF to temporary file: \(error.localizedDescription)"
+            return
+        }
+        guard let token = accessToken else {
+            uploadStatus = "No access token available."
+            return
+        }
+        uploadStatus = "Uploading PDF..."
+        uploadFileToDrive(fileURL: tempURL, accessToken: token, folderID: folderID) { result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let fileID):
+                    uploadStatus = "Upload successful. File ID: \(fileID)"
+                case .failure(let error):
+                    uploadStatus = "Upload error: \(error)"
+                }
+            }
+        }
     }
 }
 
@@ -430,7 +588,6 @@ struct BasicInfoStepView: View {
                                             (option == "New Patient" && !isExistingPatient)
                             ) {
                                 isExistingPatient = (option == "Existing Patient")
-                                print("Selected: \(option)")
 
                             }
                         }
@@ -571,7 +728,6 @@ struct DemographicsStep: View {
                                 isSelected: selectedGender == option
                             ) {
                                 selectedGender = option
-                                print("Selected gender: \(selectedGender)")
                                 if selectedGender == "Male" {
                                     isMale = true
                                     isFemale = false
@@ -696,9 +852,6 @@ struct DemographicsStep: View {
                                     selectedFamilySize = parts[0].trimmingCharacters(in: .whitespaces)
                                     selectedIncomeThreshold = parts[1].trimmingCharacters(in: .whitespaces)
                                 }
-                                print("Selected income option: \(selectedIncome)")
-                                print("Family Size: \(selectedFamilySize)")
-                                print("Income Threshold: \(selectedIncomeThreshold)")
                             }
 
                         }
@@ -710,7 +863,6 @@ struct DemographicsStep: View {
                 SectionCard(title: "Address") {
                     Button(action: {
                         isPickerPresented = true
-                        print("Address picker presented")
                     }) {
                         HStack(spacing: 15) {
                             Image(systemName: "mappin.and.ellipse")
@@ -904,6 +1056,7 @@ struct SignatureCanvasView: UIViewRepresentable {
         var dashedLineLayer: CAShapeLayer?
     }
 }
+
 // MARK: - SignatureStep
 struct SignatureStep: View {
     /// Holds the user's signature image.
