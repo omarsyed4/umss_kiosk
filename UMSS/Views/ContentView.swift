@@ -26,10 +26,10 @@ struct ContentView: View {
     @State private var uploadStatus: String = ""
     
     // Folder ID for your target folder on Drive
-    let folderID = "1Inh9cxzOUzsN_vTtDSl-cEK6UVB2V7Sa"
+    let folderID = "16b3ZeFMpHft5yN8zGguhABeNjgrTa6Mu"
     
     // Total steps (adjust as needed)
-    private var totalSteps: Int { 4 }
+    private var totalSteps: Int { 5 }
     
     var body: some View {
         NavigationView {
@@ -104,6 +104,21 @@ struct ContentView: View {
                                 SignatureStep(
                                     signatureImage: $viewModel.patientForm.signatureImage
                                 )
+                            }
+                            // Step 4 – Thank You Message
+                            else if currentStep == 4 {
+                                VStack(spacing: 30) {
+                                    HeaderView()
+                                    Text("Thank You!")
+                                        .font(.largeTitle)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(UMSSBrand.navy)
+                                    Text("Thanks for filling this out. You may hand this back to a volunteer.")
+                                        .font(.headline)
+                                        .multilineTextAlignment(.center)
+                                        .foregroundColor(.primary)
+                                }
+                                .padding()
                             }
                         }
                         .padding(.horizontal, 20)
@@ -198,7 +213,14 @@ struct ContentView: View {
                                 uploadStatus = "Failed to get PDF data."
                                 return .failure(DriveUploaderError.fileDataUnavailable)
                             }
-                            let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent("GeneratedPDF.pdf")
+                            let dateFormatter = DateFormatter()
+                            dateFormatter.dateFormat = "yyyy-MM-dd_HH-mm"
+                            let timestamp = dateFormatter.string(from: Date())
+
+                            let patientName = "\(viewModel.patientForm.firstName)_\(viewModel.patientForm.lastName)".replacingOccurrences(of: " ", with: "_")
+
+                            let fileName = "UMSS_Intake_\(timestamp)_\(patientName).pdf"
+                            let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
                             do {
                                 try pdfData.write(to: tempURL)
                             } catch {
@@ -336,7 +358,14 @@ struct ContentView: View {
             uploadStatus = "Failed to get PDF data."
             return
         }
-        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent("GeneratedPDF.pdf")
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd_HH-mm"
+        let timestamp = dateFormatter.string(from: Date())
+
+        let patientName = "\(viewModel.patientForm.firstName)_\(viewModel.patientForm.lastName)".replacingOccurrences(of: " ", with: "_")
+
+        let fileName = "UMSS_Intake_\(timestamp)_\(patientName).pdf"
+        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
         do {
             try pdfData.write(to: tempURL)
         } catch {
