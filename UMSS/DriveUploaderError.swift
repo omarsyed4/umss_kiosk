@@ -57,7 +57,7 @@ public func uploadFileToDrive(fileURL: URL,
     body.append("--\(boundary)--\r\n")
     
     // Prepare the URL.
-    guard let url = URL(string: "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id") else {
+    guard let url = URL(string: "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id&supportsAllDrives=true") else {
         completion(.failure(DriveUploaderError.invalidURL))
         return
     }
