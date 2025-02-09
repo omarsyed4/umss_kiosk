@@ -179,10 +179,6 @@ struct ContentView: View {
                                             .cornerRadius(8)
                                     }
                                 }
-                                
-                                Text(uploadStatus)
-                                    .foregroundColor(.blue)
-                                    .padding()
                             }
                         }
                         .padding(.horizontal, 20)
@@ -200,18 +196,18 @@ struct ContentView: View {
                             // Write the PDF to a temporary URL and upload it.
                             guard let pdfData = pdfDocument.dataRepresentation() else {
                                 uploadStatus = "Failed to get PDF data."
-                                return
+                                return .failure(DriveUploaderError.fileDataUnavailable)
                             }
                             let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent("GeneratedPDF.pdf")
                             do {
                                 try pdfData.write(to: tempURL)
                             } catch {
                                 uploadStatus = "Failed to write PDF to temporary file: \(error.localizedDescription)"
-                                return
+                                return .failure(error)
                             }
                             guard let token = accessToken else {
                                 uploadStatus = "No access token available."
-                                return
+                                return .failure(DriveUploaderError.invalidResponse)
                             }
                             uploadStatus = "Uploading PDF..."
                             uploadFileToDrive(fileURL: tempURL, accessToken: token, folderID: folderID) { result in
@@ -224,6 +220,8 @@ struct ContentView: View {
                                     }
                                 }
                             }
+                            // Return success immediately since the asynchronous operation will complete later.
+                            return .success(())
                         })
                     } else {
                         Text("Error generating PDF.")
