@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		0F3581E52D50596300574AE0 /* GooglePlaces in Frameworks */ = {isa = PBXBuildFile; productRef = 0F3581E42D50596300574AE0 /* GooglePlaces */; };
 		0F3581E72D50596300574AE0 /* GooglePlacesSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 0F3581E62D50596300574AE0 /* GooglePlacesSwift */; };
+		0FDC23862D58727200CB988D /* SwiftJWT in Frameworks */ = {isa = PBXBuildFile; productRef = 0FDC23852D58727200CB988D /* SwiftJWT */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -34,9 +35,22 @@
 		0FA2AE9B2D4B122E0030AE83 /* UMSSUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = UMSSUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		0FDC23932D58775900CB988D /* Exceptions for "UMSS" folder in "UMSS" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 0FA2AE7B2D4B122D0030AE83 /* UMSS */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		0FA2AE7E2D4B122D0030AE83 /* UMSS */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				0FDC23932D58775900CB988D /* Exceptions for "UMSS" folder in "UMSS" target */,
+			);
 			path = UMSS;
 			sourceTree = "<group>";
 		};
@@ -59,6 +73,7 @@
 			files = (
 				0F3581E52D50596300574AE0 /* GooglePlaces in Frameworks */,
 				0F3581E72D50596300574AE0 /* GooglePlacesSwift in Frameworks */,
+				0FDC23862D58727200CB988D /* SwiftJWT in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -121,6 +136,7 @@
 			packageProductDependencies = (
 				0F3581E42D50596300574AE0 /* GooglePlaces */,
 				0F3581E62D50596300574AE0 /* GooglePlacesSwift */,
+				0FDC23852D58727200CB988D /* SwiftJWT */,
 			);
 			productName = UMSS;
 			productReference = 0FA2AE7C2D4B122D0030AE83 /* UMSS.app */;
@@ -206,6 +222,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				0F95E5C62D50540E00CFC294 /* XCRemoteSwiftPackageReference "ios-places-sdk" */,
+				0FDC23842D58727200CB988D /* XCRemoteSwiftPackageReference "Swift-JWT" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 0FA2AE7D2D4B122D0030AE83 /* Products */;
@@ -580,6 +597,14 @@
 				minimumVersion = 9.3.0;
 			};
 		};
+		0FDC23842D58727200CB988D /* XCRemoteSwiftPackageReference "Swift-JWT" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Kitura/Swift-JWT.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.0.2;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -592,6 +617,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 0F95E5C62D50540E00CFC294 /* XCRemoteSwiftPackageReference "ios-places-sdk" */;
 			productName = GooglePlacesSwift;
+		};
+		0FDC23852D58727200CB988D /* SwiftJWT */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0FDC23842D58727200CB988D /* XCRemoteSwiftPackageReference "Swift-JWT" */;
+			productName = SwiftJWT;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
