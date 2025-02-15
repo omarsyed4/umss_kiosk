@@ -390,6 +390,28 @@ struct ContentView: View {
     }
 }
 
+/// Formats a string of digits into (XXX) XXX-XXXX format.
+func formatPhoneNumber(_ number: String) -> String {
+    // Limit to maximum 10 digits
+    let maxDigits = String(number.prefix(10))
+    let count = maxDigits.count
+    
+    switch count {
+    case 0...3:
+        return maxDigits
+    case 4...6:
+        let area = maxDigits.prefix(3)
+        let prefix = maxDigits.suffix(count - 3)
+        return "(\(area)) \(prefix)"
+    default:
+        let area = maxDigits.prefix(3)
+        let prefix = maxDigits.dropFirst(3).prefix(3)
+        let lineNumber = maxDigits.dropFirst(6)
+        return "(\(area)) \(prefix)-\(lineNumber)"
+    }
+}
+
+
 
 // MARK: - HeaderView
 struct HeaderView: View {
@@ -415,20 +437,12 @@ struct BasicInfoStepView: View {
     @Binding var dob: String
     @Binding var age: String
     @Binding var phone: String
-    @Binding var reasonForVisit: String  // NEW binding for reason for visit
+    @Binding var reasonForVisit: String
     @Binding var isExistingPatient: Bool
-    
     
     @State private var selectedDate: Date = Date()
     
-    // Custom Number Pad Layout for Phone Entry
-    private let numberPadButtons: [[String]] = [
-        ["1", "2", "3"],
-        ["4", "5", "6"],
-        ["7", "8", "9"],
-        ["Clear", "0", "Delete"]
-    ]
-    
+        
     var body: some View {
         ScrollView {
             VStack(spacing: 30) {
@@ -437,19 +451,17 @@ struct BasicInfoStepView: View {
                     Text("Basic Information")
                         .font(.title2)
                         .fontWeight(.semibold)
-                    
                     Text("Please provide your basic details")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
                 .padding(.vertical, 20)
                 
-                // MARK: - Basic Information Section
+                // MARK: - Basic Information Section (Names, DOB, Age)
                 SectionCard(title: "Basic Information") {
                     VStack(spacing: 20) {
                         HStack(spacing: 10) {
                             TextField("First Name", text: $firstName)
-                                .keyboardType(.emailAddress)
                                 .padding(12)
                                 .background(Color.white)
                                 .cornerRadius(8)
@@ -459,7 +471,6 @@ struct BasicInfoStepView: View {
                                 )
                             
                             TextField("Last Name", text: $lastName)
-                                .keyboardType(.emailAddress)
                                 .padding(12)
                                 .background(Color.white)
                                 .cornerRadius(8)
@@ -468,13 +479,29 @@ struct BasicInfoStepView: View {
                                         .stroke(Color.gray.opacity(0.5), lineWidth: 1)
                                 )
                         }
-
-                        // Email Field with Domain Buttons
+                        
                         HStack(spacing: 10) {
-                            
-                            VStack(alignment: .leading, spacing: 10) {
-                                TextField("Email", text: $email)
-                                    .keyboardType(.emailAddress)
+                                    // Date of Birth Field
+                                    HStack(spacing: 10) {
+                                        Text("DOB")
+                                            .font(.headline)
+                                            .foregroundColor(.secondary)
+                                        DatePicker("", selection: $selectedDate, displayedComponents: .date)
+                                            .datePickerStyle(CompactDatePickerStyle())
+                                            .labelsHidden()
+                                            .onChange(of: selectedDate) { newValue in
+                                                // Update dob as formatted string
+                                                let formatter = DateFormatter()
+                                                formatter.dateFormat = "MM/dd/yyyy"
+                                                dob = formatter.string(from: newValue)
+                                                
+                                                // Calculate age from the selected date
+                                                let now = Date()
+                                                let ageComponents = Calendar.current.dateComponents([.year], from: newValue, to: now)
+                                                age = "\(ageComponents.year ?? 0)"
+                                            }
+                                    }
+                                    .frame(maxWidth: .infinity)
                                     .padding(12)
                                     .background(Color.white)
                                     .cornerRadius(8)
@@ -482,115 +509,141 @@ struct BasicInfoStepView: View {
                                         RoundedRectangle(cornerRadius: 8)
                                             .stroke(Color.gray.opacity(0.5), lineWidth: 1)
                                     )
-                                
-                                // Horizontal list of domain buttons
-                                HStack(spacing: 10) {
-                                    Button(
-                                        action: {
-                                        if !email.contains("@") {
-                                            email += "@gmail.com"
-                                        }
-                                    }) {
-                                        Text("@gmail.com")
-                                            .padding(10)
-                                            .background(UMSSBrand.navy)
-                                            .foregroundColor(.white)
-                                            .cornerRadius(8)
-                                    }
                                     
-                                    Button(action: {
-                                        if !email.contains("@") {
-                                            email += "@hotmail.com"
-                                        }
-                                    }) {
-                                        Text("@hotmail.com")
-                                            .padding(10)
-                                            .background(UMSSBrand.navy)
-                                            .foregroundColor(.white)
-                                            .cornerRadius(8)
-                                    }
-                                    
-                                    Button(action: {
-                                        if !email.contains("@") {
-                                            email += "@yahoo.com"
-                                        }
-                                    }) {
-                                        Text("@yahoo.com")
-                                            .padding(10)
-                                            .background(UMSSBrand.navy)
-                                            .foregroundColor(.white)
-                                            .cornerRadius(8)
-                                    }
-                                    
-                                    Button(action: {
-                                        if !email.contains("@") {
-                                            email += "@outlook.com"
-                                        }
-                                    }) {
-                                        Text("@outlook.com")
-                                            .padding(10)
-                                            .background(UMSSBrand.navy)
-                                            .foregroundColor(.white)
-                                            .cornerRadius(8)
-                                    }
-                                    
-                                    Button(action: {
-                                        if !email.contains("@") {
-                                            email += "@icloud.com"
-                                        }
-                                    }) {
-                                        Text("@icloud.com")
-                                            .padding(10)
-                                            .background(UMSSBrand.navy)
-                                            .foregroundColor(.white)
-                                            .cornerRadius(8)
-                                    }
+                                    // Display Age (automatically calculated)
+                                    Text("Age: \(age)")
+                                        .frame(maxWidth: .infinity)
+                                        .padding(12)
+                                        .background(Color.white)
+                                        .cornerRadius(8)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 8)
+                                                .stroke(Color.gray.opacity(0.5), lineWidth: 1)
+                                        )
                                 }
-                            }
-                        }
-                        // New: Row with Date of Birth and Age fields
-                        HStack(spacing: 10) {
-                            // Date of Birth Field
-                            HStack(spacing: 10) {
-                                Text("Date of Birth")
-                                    .font(.headline)
-                                    .foregroundColor(.secondary)
-                                DatePicker("", selection: $selectedDate, displayedComponents: .date)
-                                    .datePickerStyle(CompactDatePickerStyle())
-                                    .labelsHidden()
-                                    .onChange(of: selectedDate) { newValue in
-                                        let formatter = DateFormatter()
-                                        formatter.dateFormat = "MM/dd/yyyy"
-                                        dob = formatter.string(from: newValue)
-                                    }
-                            }
-                            .frame(maxWidth: .infinity) // Ensures equal width
-                            .padding(12)
-                            .background(Color.white)
-                            .cornerRadius(8)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color.gray.opacity(0.5), lineWidth: 1)
-                            )
+                                .padding()
                             
-                            // Age Field
-                            VStack(alignment: .leading, spacing: 5) {
-                                TextField("Age", text: $age)
-                                    .keyboardType(.numberPad)
-                            }
-                            .frame(maxWidth: .infinity) // Ensures equal width
-                            .padding(12)
-                            .background(Color.white)
-                            .cornerRadius(8)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color.gray.opacity(0.5), lineWidth: 1)
-                            )
-                        }
                     }
                 }
                 
-                // NEW: Reason for Visit Section
+                // MARK: - New Contact Info Section (Email and Phone in One Row)
+                SectionCard(title: "Contact Info") {
+                    VStack(spacing: 20) {
+                        // Email Field
+                        VStack(alignment: .leading, spacing: 5) {
+                            Text("Email")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                            // Email Field with Domain Buttons
+                            HStack(spacing: 10) {
+                                
+                                VStack(alignment: .leading, spacing: 10) {
+                                    TextField("Email", text: $email)
+                                        .keyboardType(.emailAddress)
+                                        .padding(12)
+                                        .background(Color.white)
+                                        .cornerRadius(8)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 8)
+                                                .stroke(Color.gray.opacity(0.5), lineWidth: 1)
+                                        )
+                                    
+                                    // Horizontal list of domain buttons
+                                    HStack(spacing: 10) {
+                                        Button(
+                                            action: {
+                                            if !email.contains("@") {
+                                                email += "@gmail.com"
+                                            }
+                                        }) {
+                                            Text("@gmail.com")
+                                                .padding(10)
+                                                .background(UMSSBrand.navy)
+                                                .foregroundColor(.white)
+                                                .cornerRadius(8)
+                                        }
+                                        
+                                        Button(action: {
+                                            if !email.contains("@") {
+                                                email += "@hotmail.com"
+                                            }
+                                        }) {
+                                            Text("@hotmail.com")
+                                                .padding(10)
+                                                .background(UMSSBrand.navy)
+                                                .foregroundColor(.white)
+                                                .cornerRadius(8)
+                                        }
+                                        
+                                        Button(action: {
+                                            if !email.contains("@") {
+                                                email += "@yahoo.com"
+                                            }
+                                        }) {
+                                            Text("@yahoo.com")
+                                                .padding(10)
+                                                .background(UMSSBrand.navy)
+                                                .foregroundColor(.white)
+                                                .cornerRadius(8)
+                                        }
+                                        
+                                        Button(action: {
+                                            if !email.contains("@") {
+                                                email += "@outlook.com"
+                                            }
+                                        }) {
+                                            Text("@outlook.com")
+                                                .padding(10)
+                                                .background(UMSSBrand.navy)
+                                                .foregroundColor(.white)
+                                                .cornerRadius(8)
+                                        }
+                                        
+                                        Button(action: {
+                                            if !email.contains("@") {
+                                                email += "@icloud.com"
+                                            }
+                                        }) {
+                                            Text("@icloud.com")
+                                                .padding(10)
+                                                .background(UMSSBrand.navy)
+                                                .foregroundColor(.white)
+                                                .cornerRadius(8)
+                                        }
+                                    }
+                                }
+                            }
+
+                        }
+                        VStack {
+                            // Phone Field
+                            VStack(alignment: .leading, spacing: 5) {
+                                Text("Phone")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                                TextField("Phone", text: $phone)
+                                    .keyboardType(.numberPad)
+                                    .padding(12)
+                                    .background(Color.white)
+                                    .cornerRadius(8)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .stroke(Color.gray.opacity(0.5), lineWidth: 1)
+                                    )
+                                    .onChange(of: phone) { newValue in
+                                        // Filter out non-digit characters
+                                        let digits = newValue.filter { $0.isNumber }
+                                        // Format the number
+                                        phone = formatPhoneNumber(digits)
+                                    }
+                            }
+                        }
+                        
+
+                    }
+                }
+                
+                // MARK: - Reason for Visit Section
                 SectionCard(title: "Reason for Visit") {
                     VStack(spacing: 12) {
                         TextEditor(text: $reasonForVisit)
@@ -605,7 +658,7 @@ struct BasicInfoStepView: View {
                     }
                 }
                 
-                // MARK: - New Or Existing Patient Section
+                // MARK: - New or Existing Patient Section
                 SectionCard(title: "New Or Existing Patient") {
                     VStack(spacing: 12) {
                         ForEach(["New Patient", "Existing Patient"], id: \.self) { option in
@@ -615,47 +668,10 @@ struct BasicInfoStepView: View {
                                             (option == "New Patient" && !isExistingPatient)
                             ) {
                                 isExistingPatient = (option == "Existing Patient")
-
                             }
                         }
                     }
                     .padding(.vertical, 8)
-                }
-                
-                // MARK: - Phone Number Section
-                SectionCard(title: "Phone Number") {
-                    VStack(spacing: 20) {
-                        // Display the Entered Phone Number
-                        Text(phone)
-                            .font(.title)
-                            .padding()
-                            .frame(maxWidth: .infinity)
-                            .background(Color.white)
-                            .cornerRadius(8)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color.gray.opacity(0.5), lineWidth: 1)
-                            )
-                        
-                        // Custom Number Pad Grid
-                        VStack(spacing: 15) {
-                            ForEach(numberPadButtons, id: \.self) { row in
-                                HStack(spacing: 15) {
-                                    ForEach(row, id: \.self) { button in
-                                        Button(action: {
-                                            handleButtonPress(button)
-                                        }) {
-                                            Text(button)
-                                                .font(.title2)
-                                                .frame(width: 80, height: 80)
-                                                .background(Color(.systemGray5))
-                                                .cornerRadius(12)
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
                 }
             }
             .padding(.vertical, 30)
@@ -676,6 +692,8 @@ struct BasicInfoStepView: View {
         }
     }
 }
+
+
 
 
 // MARK: - DemographicsStep
