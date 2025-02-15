@@ -30,6 +30,37 @@ struct ContentView: View {
     
     // Total steps (adjust as needed)
     private var totalSteps: Int { 5 }
+
+    // MARK: - Validation for the current step
+    private var isCurrentStepValid: Bool {
+        switch currentStep {
+        case 0:
+            return true
+        case 1:
+            // Require basic info fields non-empty:
+            return !viewModel.patientForm.email.trimmingCharacters(in: .whitespaces).isEmpty &&
+                   !viewModel.patientForm.firstName.trimmingCharacters(in: .whitespaces).isEmpty &&
+                   !viewModel.patientForm.lastName.trimmingCharacters(in: .whitespaces).isEmpty &&
+                   !viewModel.patientForm.dob.trimmingCharacters(in: .whitespaces).isEmpty &&
+                   !viewModel.patientForm.age.trimmingCharacters(in: .whitespaces).isEmpty &&
+                   !viewModel.patientForm.phone.trimmingCharacters(in: .whitespaces).isEmpty &&
+                   !viewModel.patientForm.reasonForVisit.trimmingCharacters(in: .whitespaces).isEmpty
+        case 2:
+            // Require demographics fields non-empty:
+            return !viewModel.patientForm.selectedGender.trimmingCharacters(in: .whitespaces).isEmpty &&
+                   !viewModel.patientForm.selectedRace.trimmingCharacters(in: .whitespaces).isEmpty &&
+                   !viewModel.patientForm.selectedMaritalStatus.trimmingCharacters(in: .whitespaces).isEmpty &&
+                   !viewModel.patientForm.selectedEthnicity.trimmingCharacters(in: .whitespaces).isEmpty &&
+                   !viewModel.patientForm.selectedIncome.trimmingCharacters(in: .whitespaces).isEmpty &&
+                   !viewModel.patientForm.address.trimmingCharacters(in: .whitespaces).isEmpty
+        case 3:
+            // Require a signature image:
+            return viewModel.patientForm.signatureImage != nil
+        default:
+            return true
+        }
+    }
+
     
     var body: some View {
         NavigationView {
@@ -43,7 +74,6 @@ struct ContentView: View {
                         SignatureStep(signatureImage: $viewModel.patientForm.signatureImage)
                             .padding(.horizontal, 20)
                     } else {
-                        // All other steps wrapped in a ScrollView
                         ScrollView {
                             VStack(spacing: 0) {
                                 // Step 0 – “Let’s Begin”
@@ -162,9 +192,10 @@ struct ContentView: View {
                                     .foregroundColor(.white)
                                     .padding(.vertical, 10)
                                     .padding(.horizontal, 20)
-                                    .background(UMSSBrand.gold)
+                                    .background(isCurrentStepValid ? UMSSBrand.gold : Color.gray)
                                     .cornerRadius(8)
                             }
+                            .disabled(!isCurrentStepValid)
                         } else {
                             Button(action: previewPDFAction) {
                                 if isGeneratingPDF {
@@ -258,9 +289,10 @@ struct ContentView: View {
                         .foregroundColor(.white)
                         .padding(.vertical, 10)
                         .padding(.horizontal, 20)
-                        .background(UMSSBrand.gold)
+                        .background(isCurrentStepValid ? UMSSBrand.gold : Color.gray)
                         .cornerRadius(8)
                 }
+                .disabled(!isCurrentStepValid)
             } else {
                 Button(action: previewPDFAction) {
                     if isGeneratingPDF {
@@ -469,16 +501,6 @@ struct BasicInfoStepView: View {
                                             .stroke(Color.gray.opacity(0.5), lineWidth: 1)
                                     )
                                     
-                                    // Display Age (automatically calculated)
-                                    Text("Age: \(age)")
-                                        .frame(maxWidth: .infinity)
-                                        .padding(12)
-                                        .background(Color.white)
-                                        .cornerRadius(8)
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 8)
-                                                .stroke(Color.gray.opacity(0.5), lineWidth: 1)
-                                        )
                                 }
                                 .padding()
                             
@@ -639,17 +661,6 @@ struct BasicInfoStepView: View {
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
     }
     
-    // MARK: - Custom Number Pad Handler
-    private func handleButtonPress(_ input: String) {
-        switch input {
-        case "Clear":
-            phone = ""
-        case "Delete":
-            if !phone.isEmpty { phone.removeLast() }
-        default:
-            phone.append(input)
-        }
-    }
 }
 
 
@@ -1084,28 +1095,29 @@ struct SignatureStep: View {
                     .padding(.horizontal)
                 
                 // Buttons to handle the drawing
-                HStack(spacing: 40) {
-                    Button("Clear") {
+                HStack(spacing: 20) {
+                    ActionButton(
+                        title: "Clear",
+                        iconName: "trash",
+                        backgroundColor: Color.red.opacity(0.2),
+                        foregroundColor: .red
+                    ) {
                         // Clears the canvas
                         canvasView.drawing = PKDrawing()
                     }
-                    .padding(.vertical, 8)
-                    .padding(.horizontal, 16)
-                    .background(Color.red.opacity(0.1))
-                    .foregroundColor(.red)
-                    .cornerRadius(8)
                     
-                    Button("Save Signature") {
-                        // Extract an image from the drawing
+                    ActionButton(
+                        title: "Save Signature",
+                        iconName: "square.and.arrow.down",
+                        backgroundColor: Color.blue.opacity(0.2),
+                        foregroundColor: .blue
+                    ) {
+                        // Extract an image from the drawing and store it
                         let image = canvasView.drawing.image(from: canvasView.bounds, scale: 1.0)
                         signatureImage = image
                     }
-                    .padding(.vertical, 8)
-                    .padding(.horizontal, 16)
-                    .background(Color.blue.opacity(0.1))
-                    .foregroundColor(.blue)
-                    .cornerRadius(8)
                 }
+                .padding(.horizontal)
                 .padding(.bottom, 30)
             }
             .padding(.top, 20)
@@ -1113,5 +1125,32 @@ struct SignatureStep: View {
         .scrollDisabled(true)  // Disable scrolling
         .frame(maxWidth: .infinity)
         .background(Color.white.ignoresSafeArea())
+    }
+}
+
+
+struct ActionButton: View {
+    let title: String
+    let iconName: String
+    let backgroundColor: Color
+    let foregroundColor: Color
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            HStack {
+                Image(systemName: iconName)
+                    .font(.headline)
+                Text(title)
+                    .fontWeight(.medium)
+                    .font(.headline)
+            }
+            .padding()
+            .frame(minWidth: 0, maxWidth: .infinity)
+            .background(backgroundColor)
+            .foregroundColor(foregroundColor)
+            .cornerRadius(10)
+            .shadow(color: Color.black.opacity(0.2), radius: 2, x: 0, y: 2)
+        }
     }
 }
