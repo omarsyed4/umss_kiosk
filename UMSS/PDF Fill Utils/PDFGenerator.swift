@@ -2,7 +2,7 @@ import PDFKit
 import UIKit
 
 class PDFGenerator {
-    static func fillPDF(pdfDocument: PDFDocument, with formData: PatientForm) {
+    static func fillPDF(pdfDocument: PDFDocument, with formData: PatientModel) {
         let pageCount = pdfDocument.pageCount
         if pageCount == 0 { return }
         

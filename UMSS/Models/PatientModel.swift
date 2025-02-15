@@ -1,5 +1,5 @@
 //
-//  PatientForm.swift
+//  PatientModel.swift
 //  UMSS
 //
 //  Created by Omar Syed on 1/29/25.
@@ -8,7 +8,7 @@
 import SwiftUI
 
 /// Model struct that holds the user's input data
-struct PatientForm {
+struct PatientModel {
     // Existing fields
     var email: String = ""
     var firstName: String = ""
