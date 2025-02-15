@@ -2,9 +2,9 @@ import SwiftUI
 import PDFKit
 import UIKit
 
-class PatientFormViewModel: ObservableObject {
-    @Published var patientForm = PatientForm()
-    
+class PatientModelViewModel: ObservableObject {
+    @Published var patientModel = PatientModel()
+
     func generateFilledPDF() -> PDFDocument? {
         guard let formURL = Bundle.main.url(forResource: "UMSS Document", withExtension: "pdf") else {
             return nil
@@ -17,8 +17,8 @@ class PatientFormViewModel: ObservableObject {
         print("[DEBUG] Successfully loaded PDF. Page count: \(pdfDocument.pageCount)")
         
         // Use the new PDF functions to fill and add the signature
-        PDFGenerator.fillPDF(pdfDocument: pdfDocument, with: patientForm)
-        PDFGenerator.addSignatureImage(pdfDocument: pdfDocument, signatureImage: patientForm.signatureImage)
+        PDFGenerator.fillPDF(pdfDocument: pdfDocument, with: patientModel)
+        PDFGenerator.addSignatureImage(pdfDocument: pdfDocument, signatureImage: patientModel.signatureImage)
         
         if let pdfData = pdfDocument.dataRepresentation() {
             let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!

@@ -16,7 +16,7 @@ struct ContentView: View {
     @State private var isAddressPickerPresented = false
     
     // Your patient form view model and PDF state
-    @StateObject private var viewModel = PatientFormViewModel()
+    @StateObject private var viewModel = PatientModelViewModel()
     @State private var showPDFPreview = false
     @State private var isGeneratingPDF = false
     @State private var pdfDocument: PDFDocument?
@@ -41,24 +41,24 @@ struct ContentView: View {
             return true
         case 1:
             // Require basic info fields non-empty:
-            return !viewModel.patientForm.email.trimmingCharacters(in: .whitespaces).isEmpty &&
-                   !viewModel.patientForm.firstName.trimmingCharacters(in: .whitespaces).isEmpty &&
-                   !viewModel.patientForm.lastName.trimmingCharacters(in: .whitespaces).isEmpty &&
-                   !viewModel.patientForm.dob.trimmingCharacters(in: .whitespaces).isEmpty &&
-                   !viewModel.patientForm.age.trimmingCharacters(in: .whitespaces).isEmpty &&
-                   !viewModel.patientForm.phone.trimmingCharacters(in: .whitespaces).isEmpty &&
-                   !viewModel.patientForm.reasonForVisit.trimmingCharacters(in: .whitespaces).isEmpty
+            return !viewModel.patientModel.email.trimmingCharacters(in: .whitespaces).isEmpty &&
+                   !viewModel.patientModel.firstName.trimmingCharacters(in: .whitespaces).isEmpty &&
+                   !viewModel.patientModel.lastName.trimmingCharacters(in: .whitespaces).isEmpty &&
+                   !viewModel.patientModel.dob.trimmingCharacters(in: .whitespaces).isEmpty &&
+                   !viewModel.patientModel.age.trimmingCharacters(in: .whitespaces).isEmpty &&
+                   !viewModel.patientModel.phone.trimmingCharacters(in: .whitespaces).isEmpty &&
+                   !viewModel.patientModel.reasonForVisit.trimmingCharacters(in: .whitespaces).isEmpty
         case 2:
             // Require demographics fields non-empty:
-            return !viewModel.patientForm.selectedGender.trimmingCharacters(in: .whitespaces).isEmpty &&
-                   !viewModel.patientForm.selectedRace.trimmingCharacters(in: .whitespaces).isEmpty &&
-                   !viewModel.patientForm.selectedMaritalStatus.trimmingCharacters(in: .whitespaces).isEmpty &&
-                   !viewModel.patientForm.selectedEthnicity.trimmingCharacters(in: .whitespaces).isEmpty &&
-                   !viewModel.patientForm.selectedIncome.trimmingCharacters(in: .whitespaces).isEmpty &&
-                   !viewModel.patientForm.address.trimmingCharacters(in: .whitespaces).isEmpty
+            return !viewModel.patientModel.selectedGender.trimmingCharacters(in: .whitespaces).isEmpty &&
+                   !viewModel.patientModel.selectedRace.trimmingCharacters(in: .whitespaces).isEmpty &&
+                   !viewModel.patientModel.selectedMaritalStatus.trimmingCharacters(in: .whitespaces).isEmpty &&
+                   !viewModel.patientModel.selectedEthnicity.trimmingCharacters(in: .whitespaces).isEmpty &&
+                   !viewModel.patientModel.selectedIncome.trimmingCharacters(in: .whitespaces).isEmpty &&
+                   !viewModel.patientModel.address.trimmingCharacters(in: .whitespaces).isEmpty
         case 3:
             // Require a signature image:
-            return viewModel.patientForm.signatureImage != nil
+            return viewModel.patientModel.signatureImage != nil
         default:
             return true
         }
@@ -74,7 +74,7 @@ struct ContentView: View {
                 Group {
                     if currentStep == 3 {
                         // Step 3 – Signature (displayed without a ScrollView)
-                        SignatureStep(signatureImage: $viewModel.patientForm.signatureImage)
+                        SignatureStep(signatureImage: $viewModel.patientModel.signatureImage)
                             .padding(.horizontal, 20)
                     } else {
                         ScrollView {
@@ -95,44 +95,44 @@ struct ContentView: View {
                                 // Step 1 – Basic Info
                                 else if currentStep == 1 {
                                     BasicInfoStepView(
-                                        email: $viewModel.patientForm.email,
-                                        firstName: $viewModel.patientForm.firstName,
-                                        lastName: $viewModel.patientForm.lastName,
-                                        dob: $viewModel.patientForm.dob,
-                                        age: $viewModel.patientForm.age,
-                                        phone: $viewModel.patientForm.phone,
-                                        reasonForVisit: $viewModel.patientForm.reasonForVisit,
-                                        isExistingPatient: $viewModel.patientForm.isExistingPatient
+                                        email: $viewModel.patientModel.email,
+                                        firstName: $viewModel.patientModel.firstName,
+                                        lastName: $viewModel.patientModel.lastName,
+                                        dob: $viewModel.patientModel.dob,
+                                        age: $viewModel.patientModel.age,
+                                        phone: $viewModel.patientModel.phone,
+                                        reasonForVisit: $viewModel.patientModel.reasonForVisit,
+                                        isExistingPatient: $viewModel.patientModel.isExistingPatient
                                     )
                                 }
                                 // Step 2 – Demographics
                                 else if currentStep == 2 {
                                     DemographicsStep(
-                                        selectedGender: $viewModel.patientForm.selectedGender,
-                                        selectedRace: $viewModel.patientForm.selectedRace,
-                                        selectedMaritalStatus: $viewModel.patientForm.selectedMaritalStatus,
-                                        selectedEthnicity: $viewModel.patientForm.selectedEthnicity,
-                                        selectedIncome: $viewModel.patientForm.selectedIncome,
-                                        isMale: $viewModel.patientForm.isMale,
-                                        isFemale: $viewModel.patientForm.isFemale,
-                                        isWhite: $viewModel.patientForm.isWhite,
-                                        isBlack: $viewModel.patientForm.isBlack,
-                                        isAsian: $viewModel.patientForm.isAsian,
-                                        isAmIndian: $viewModel.patientForm.isAmIndian,
-                                        isHispanic: $viewModel.patientForm.isHispanic,
-                                        isNonHispanic: $viewModel.patientForm.isNonHispanic,
-                                        isSingle: $viewModel.patientForm.isSingle,
-                                        isMarried: $viewModel.patientForm.isMarried,
-                                        isDivorced: $viewModel.patientForm.isDivorced,
-                                        isWidowed: $viewModel.patientForm.isWidowed,
-                                        selectedFamilySize: $viewModel.patientForm.selectedFamilySize,
-                                        selectedIncomeThreshold: $viewModel.patientForm.selectedIncomeThreshold,
-                                        fullAddress: $viewModel.patientForm.rawAddress,
-                                        streetAddress: $viewModel.patientForm.address,
-                                        city: $viewModel.patientForm.city,
-                                        state: $viewModel.patientForm.state,
-                                        zip: $viewModel.patientForm.zip,
-                                        cityStateZip: $viewModel.patientForm.cityStateZip,
+                                        selectedGender: $viewModel.patientModel.selectedGender,
+                                        selectedRace: $viewModel.patientModel.selectedRace,
+                                        selectedMaritalStatus: $viewModel.patientModel.selectedMaritalStatus,
+                                        selectedEthnicity: $viewModel.patientModel.selectedEthnicity,
+                                        selectedIncome: $viewModel.patientModel.selectedIncome,
+                                        isMale: $viewModel.patientModel.isMale,
+                                        isFemale: $viewModel.patientModel.isFemale,
+                                        isWhite: $viewModel.patientModel.isWhite,
+                                        isBlack: $viewModel.patientModel.isBlack,
+                                        isAsian: $viewModel.patientModel.isAsian,
+                                        isAmIndian: $viewModel.patientModel.isAmIndian,
+                                        isHispanic: $viewModel.patientModel.isHispanic,
+                                        isNonHispanic: $viewModel.patientModel.isNonHispanic,
+                                        isSingle: $viewModel.patientModel.isSingle,
+                                        isMarried: $viewModel.patientModel.isMarried,
+                                        isDivorced: $viewModel.patientModel.isDivorced,
+                                        isWidowed: $viewModel.patientModel.isWidowed,
+                                        selectedFamilySize: $viewModel.patientModel.selectedFamilySize,
+                                        selectedIncomeThreshold: $viewModel.patientModel.selectedIncomeThreshold,
+                                        fullAddress: $viewModel.patientModel.rawAddress,
+                                        streetAddress: $viewModel.patientModel.address,
+                                        city: $viewModel.patientModel.city,
+                                        state: $viewModel.patientModel.state,
+                                        zip: $viewModel.patientModel.zip,
+                                        cityStateZip: $viewModel.patientModel.cityStateZip,
                                         isPickerPresented: $isAddressPickerPresented
                                     )
                                 }
@@ -241,13 +241,13 @@ struct ContentView: View {
             }
             .sheet(isPresented: $isAddressPickerPresented) {
                 GoogleAddressAutocompleteView(
-                    rawAddress: $viewModel.patientForm.rawAddress,
-                    streetAddress: $viewModel.patientForm.address,
-                    city: $viewModel.patientForm.city,
-                    state: $viewModel.patientForm.state,
-                    zip: $viewModel.patientForm.zip,
-                    cityState: $viewModel.patientForm.cityState,
-                    cityStateZip: $viewModel.patientForm.cityStateZip,
+                    rawAddress: $viewModel.patientModel.rawAddress,
+                    streetAddress: $viewModel.patientModel.address,
+                    city: $viewModel.patientModel.city,
+                    state: $viewModel.patientModel.state,
+                    zip: $viewModel.patientModel.zip,
+                    cityState: $viewModel.patientModel.cityState,
+                    cityStateZip: $viewModel.patientModel.cityStateZip,
                     isPresented: $isAddressPickerPresented
                 )
             }
@@ -359,46 +359,46 @@ struct ContentView: View {
     // Reset the form and state
     private func resetForm() {
         // Reset basic info
-        viewModel.patientForm.email = ""
-        viewModel.patientForm.firstName = ""
-        viewModel.patientForm.lastName = ""
-        viewModel.patientForm.dob = ""
-        viewModel.patientForm.age = ""
-        viewModel.patientForm.phone = ""
-        viewModel.patientForm.reasonForVisit = ""
-        viewModel.patientForm.isExistingPatient = false
+        viewModel.patientModel.email = ""
+        viewModel.patientModel.firstName = ""
+        viewModel.patientModel.lastName = ""
+        viewModel.patientModel.dob = ""
+        viewModel.patientModel.age = ""
+        viewModel.patientModel.phone = ""
+        viewModel.patientModel.reasonForVisit = ""
+        viewModel.patientModel.isExistingPatient = false
         
         // Reset demographics
-        viewModel.patientForm.selectedGender = ""
-        viewModel.patientForm.selectedRace = ""
-        viewModel.patientForm.selectedMaritalStatus = ""
-        viewModel.patientForm.selectedEthnicity = ""
-        viewModel.patientForm.selectedIncome = ""
-        viewModel.patientForm.address = ""
+        viewModel.patientModel.selectedGender = ""
+        viewModel.patientModel.selectedRace = ""
+        viewModel.patientModel.selectedMaritalStatus = ""
+        viewModel.patientModel.selectedEthnicity = ""
+        viewModel.patientModel.selectedIncome = ""
+        viewModel.patientModel.address = ""
         
         // Reset signature and address details
-        viewModel.patientForm.signatureImage = nil
-        viewModel.patientForm.rawAddress = ""
-        viewModel.patientForm.city = ""
-        viewModel.patientForm.state = ""
-        viewModel.patientForm.zip = ""
-        viewModel.patientForm.cityStateZip = ""
+        viewModel.patientModel.signatureImage = nil
+        viewModel.patientModel.rawAddress = ""
+        viewModel.patientModel.city = ""
+        viewModel.patientModel.state = ""
+        viewModel.patientModel.zip = ""
+        viewModel.patientModel.cityStateZip = ""
         
         // Reset additional demographic booleans/values
-        viewModel.patientForm.isMale = false
-        viewModel.patientForm.isFemale = false
-        viewModel.patientForm.isWhite = false
-        viewModel.patientForm.isBlack = false
-        viewModel.patientForm.isAsian = false
-        viewModel.patientForm.isAmIndian = false
-        viewModel.patientForm.isHispanic = false
-        viewModel.patientForm.isNonHispanic = false
-        viewModel.patientForm.isSingle = false
-        viewModel.patientForm.isMarried = false
-        viewModel.patientForm.isDivorced = false
-        viewModel.patientForm.isWidowed = false
-        viewModel.patientForm.selectedFamilySize = ""
-        viewModel.patientForm.selectedIncomeThreshold = ""
+        viewModel.patientModel.isMale = false
+        viewModel.patientModel.isFemale = false
+        viewModel.patientModel.isWhite = false
+        viewModel.patientModel.isBlack = false
+        viewModel.patientModel.isAsian = false
+        viewModel.patientModel.isAmIndian = false
+        viewModel.patientModel.isHispanic = false
+        viewModel.patientModel.isNonHispanic = false
+        viewModel.patientModel.isSingle = false
+        viewModel.patientModel.isMarried = false
+        viewModel.patientModel.isDivorced = false
+        viewModel.patientModel.isWidowed = false
+        viewModel.patientModel.selectedFamilySize = ""
+        viewModel.patientModel.selectedIncomeThreshold = ""
         
         // Reset other state as needed
         currentStep = 0
@@ -418,7 +418,7 @@ struct ContentView: View {
         dateFormatter.dateFormat = "yyyy-MM-dd_HH-mm"
         let timestamp = dateFormatter.string(from: Date())
 
-        let patientName = "\(viewModel.patientForm.firstName)_\(viewModel.patientForm.lastName)".replacingOccurrences(of: " ", with: "_")
+        let patientName = "\(viewModel.patientModel.firstName)_\(viewModel.patientModel.lastName)".replacingOccurrences(of: " ", with: "_")
 
         let fileName = "UMSS_Intake_\(timestamp)_\(patientName).pdf"
         let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
