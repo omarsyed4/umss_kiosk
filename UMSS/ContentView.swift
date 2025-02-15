@@ -36,213 +36,168 @@ struct ContentView: View {
             ZStack {
                 Color.white.ignoresSafeArea()
                 
-                VStack(spacing: 0) {
-                    if currentStep == 0 {
-                        HeaderView()
-                    }
-                    
-                    ScrollView {
-                        VStack(spacing: 0) {
-                            // Step 0 – “Let’s Begin”
-                            if currentStep == 0 {
-                                VStack(spacing: 20) {
-                                    Text("Let's Begin!")
-                                        .font(.largeTitle)
-                                        .fontWeight(.bold)
-                                        .foregroundColor(UMSSBrand.navy)
-                                    Text("Welcome to the intake process.\nTap Next to get started.")
-                                        .multilineTextAlignment(.center)
-                                        .foregroundColor(.primary)
-                                }
-                            }
-                            // Step 1 – Basic Info
-                            else if currentStep == 1 {
-                                BasicInfoStepView(
-                                    email: $viewModel.patientForm.email,
-                                    firstName: $viewModel.patientForm.firstName,
-                                    lastName: $viewModel.patientForm.lastName,
-                                    dob: $viewModel.patientForm.dob,
-                                    age: $viewModel.patientForm.age,
-                                    phone: $viewModel.patientForm.phone,
-                                    reasonForVisit: $viewModel.patientForm.reasonForVisit,
-                                    isExistingPatient: $viewModel.patientForm.isExistingPatient
-                                )
-                            }
-                            // Step 2 – Demographics
-                            else if currentStep == 2 {
-                                DemographicsStep(
-                                    selectedGender: $viewModel.patientForm.selectedGender,
-                                    selectedRace: $viewModel.patientForm.selectedRace,
-                                    selectedMaritalStatus: $viewModel.patientForm.selectedMaritalStatus,
-                                    selectedEthnicity: $viewModel.patientForm.selectedEthnicity,
-                                    selectedIncome: $viewModel.patientForm.selectedIncome,
-                                    isMale: $viewModel.patientForm.isMale,
-                                    isFemale: $viewModel.patientForm.isFemale,
-                                    isWhite: $viewModel.patientForm.isWhite,
-                                    isBlack: $viewModel.patientForm.isBlack,
-                                    isAsian: $viewModel.patientForm.isAsian,
-                                    isAmIndian: $viewModel.patientForm.isAmIndian,
-                                    isHispanic: $viewModel.patientForm.isHispanic,
-                                    isNonHispanic: $viewModel.patientForm.isNonHispanic,
-                                    isSingle: $viewModel.patientForm.isSingle,
-                                    isMarried: $viewModel.patientForm.isMarried,
-                                    isDivorced: $viewModel.patientForm.isDivorced,
-                                    isWidowed: $viewModel.patientForm.isWidowed,
-                                    selectedFamilySize: $viewModel.patientForm.selectedFamilySize,
-                                    selectedIncomeThreshold: $viewModel.patientForm.selectedIncomeThreshold,
-                                    fullAddress: $viewModel.patientForm.rawAddress,
-                                    streetAddress: $viewModel.patientForm.address,
-                                    city: $viewModel.patientForm.city,
-                                    state: $viewModel.patientForm.state,
-                                    zip: $viewModel.patientForm.zip,
-                                    cityStateZip: $viewModel.patientForm.cityStateZip,
-                                    isPickerPresented: $isAddressPickerPresented
-                                )
-                            }
-                            // Step 3 – Signature
-                            else if currentStep == 3 {
-                                SignatureStep(
-                                    signatureImage: $viewModel.patientForm.signatureImage
-                                )
-                            }
-                            // Step 4 – Thank You Message
-                            else if currentStep == 4 {
-                                VStack(spacing: 30) {
+                // Conditional Content Group:
+                Group {
+                    if currentStep == 3 {
+                        // Step 3 – Signature (displayed without a ScrollView)
+                        SignatureStep(signatureImage: $viewModel.patientForm.signatureImage)
+                            .padding(.horizontal, 20)
+                    } else {
+                        // All other steps wrapped in a ScrollView
+                        ScrollView {
+                            VStack(spacing: 0) {
+                                // Step 0 – “Let’s Begin”
+                                if currentStep == 0 {
                                     HeaderView()
-                                    Text("Thank You!")
-                                        .font(.largeTitle)
-                                        .fontWeight(.bold)
-                                        .foregroundColor(UMSSBrand.navy)
-                                    Text("Thanks for filling this out. You may hand this back to a volunteer.")
-                                        .font(.headline)
-                                        .multilineTextAlignment(.center)
-                                        .foregroundColor(.primary)
-                                }
-                                .padding()
-                            }
-                        }
-                        .padding(.horizontal, 20)
-                        .transition(
-                            .asymmetric(
-                                insertion: .move(edge: moveDirection),
-                                removal: .move(edge: moveDirection == .trailing ? .leading : .trailing)
-                            )
-                        )
-                        .animation(.easeInOut, value: currentStep)
-                    }
-                    
-                    // Sticky Navigation Buttons
-                    .safeAreaInset(edge: .bottom, spacing: 0) {
-                        HStack {
-                            if currentStep > 0 {
-                                Button(action: {
-                                    withAnimation {
-                                        moveDirection = .leading
-                                        currentStep -= 1
+                                    VStack(spacing: 20) {
+                                        Text("Let's Begin!")
+                                            .font(.largeTitle)
+                                            .fontWeight(.bold)
+                                            .foregroundColor(UMSSBrand.navy)
+                                        Text("Welcome to the intake process.\nTap Next to get started.")
+                                            .multilineTextAlignment(.center)
+                                            .foregroundColor(.primary)
                                     }
-                                }) {
-                                    Text("Back")
-                                        .font(.headline)
-                                        .foregroundColor(.white)
-                                        .padding(.vertical, 10)
-                                        .padding(.horizontal, 20)
-                                        .background(UMSSBrand.navy)
-                                        .cornerRadius(8)
                                 }
-                            }
-                            
-                            Spacer()
-                            
-                            if currentStep < totalSteps - 1 {
-                                Button(action: {
-                                    withAnimation {
-                                        moveDirection = .trailing
-                                        currentStep += 1
-                                    }
-                                }) {
-                                    Text("Next")
-                                        .font(.headline)
-                                        .foregroundColor(.white)
-                                        .padding(.vertical, 10)
-                                        .padding(.horizontal, 20)
-                                        .background(UMSSBrand.gold)
-                                        .cornerRadius(8)
+                                // Step 1 – Basic Info
+                                else if currentStep == 1 {
+                                    BasicInfoStepView(
+                                        email: $viewModel.patientForm.email,
+                                        firstName: $viewModel.patientForm.firstName,
+                                        lastName: $viewModel.patientForm.lastName,
+                                        dob: $viewModel.patientForm.dob,
+                                        age: $viewModel.patientForm.age,
+                                        phone: $viewModel.patientForm.phone,
+                                        reasonForVisit: $viewModel.patientForm.reasonForVisit,
+                                        isExistingPatient: $viewModel.patientForm.isExistingPatient
+                                    )
                                 }
-                            } else {
-                                Button(action: {
-                                    isGeneratingPDF = true
-                                    if accessToken == nil {
-                                        getAccessToken { token in
-                                            DispatchQueue.main.async {
-                                                self.accessToken = token
-                                                self.generateAndShowPDF()
-                                            }
-                                        }
-                                    } else {
-                                        generateAndShowPDF()
-                                    }
-                                }) {
-                                    if isGeneratingPDF {
-                                        ProgressView()
-                                    } else {
-                                        Text("Preview PDF")
+                                // Step 2 – Demographics
+                                else if currentStep == 2 {
+                                    DemographicsStep(
+                                        selectedGender: $viewModel.patientForm.selectedGender,
+                                        selectedRace: $viewModel.patientForm.selectedRace,
+                                        selectedMaritalStatus: $viewModel.patientForm.selectedMaritalStatus,
+                                        selectedEthnicity: $viewModel.patientForm.selectedEthnicity,
+                                        selectedIncome: $viewModel.patientForm.selectedIncome,
+                                        isMale: $viewModel.patientForm.isMale,
+                                        isFemale: $viewModel.patientForm.isFemale,
+                                        isWhite: $viewModel.patientForm.isWhite,
+                                        isBlack: $viewModel.patientForm.isBlack,
+                                        isAsian: $viewModel.patientForm.isAsian,
+                                        isAmIndian: $viewModel.patientForm.isAmIndian,
+                                        isHispanic: $viewModel.patientForm.isHispanic,
+                                        isNonHispanic: $viewModel.patientForm.isNonHispanic,
+                                        isSingle: $viewModel.patientForm.isSingle,
+                                        isMarried: $viewModel.patientForm.isMarried,
+                                        isDivorced: $viewModel.patientForm.isDivorced,
+                                        isWidowed: $viewModel.patientForm.isWidowed,
+                                        selectedFamilySize: $viewModel.patientForm.selectedFamilySize,
+                                        selectedIncomeThreshold: $viewModel.patientForm.selectedIncomeThreshold,
+                                        fullAddress: $viewModel.patientForm.rawAddress,
+                                        streetAddress: $viewModel.patientForm.address,
+                                        city: $viewModel.patientForm.city,
+                                        state: $viewModel.patientForm.state,
+                                        zip: $viewModel.patientForm.zip,
+                                        cityStateZip: $viewModel.patientForm.cityStateZip,
+                                        isPickerPresented: $isAddressPickerPresented
+                                    )
+                                }
+                                // Step 4 – Thank You Message
+                                else if currentStep == 4 {
+                                    VStack(spacing: 30) {
+                                        HeaderView()
+                                        Text("Thank You!")
+                                            .font(.largeTitle)
+                                            .fontWeight(.bold)
+                                            .foregroundColor(UMSSBrand.navy)
+                                        Text("Thanks for filling this out. You may hand this back to a volunteer.")
                                             .font(.headline)
-                                            .foregroundColor(.white)
-                                            .padding(.vertical, 10)
-                                            .padding(.horizontal, 20)
-                                            .background(UMSSBrand.gold)
-                                            .cornerRadius(8)
+                                            .multilineTextAlignment(.center)
+                                            .foregroundColor(.primary)
                                     }
+                                    .padding()
                                 }
                             }
+                            .padding(.horizontal, 20)
+                            .transition(
+                                .asymmetric(
+                                    insertion: .move(edge: moveDirection),
+                                    removal: .move(edge: moveDirection == .trailing ? .leading : .trailing)
+                                )
+                            )
+                            .animation(.easeInOut, value: currentStep)
                         }
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 10)
-                        .background(Color.white)
-                        .shadow(color: Color.black.opacity(0.2), radius: 5, x: 0, y: -2)
                     }
+                } // End Group
+                // Attach sticky navigation buttons using safeAreaInset on the Group
+                .safeAreaInset(edge: .bottom, spacing: 0) {
+                    HStack {
+                        if currentStep > 0 {
+                            Button(action: {
+                                withAnimation {
+                                    moveDirection = .leading
+                                    currentStep -= 1
+                                }
+                            }) {
+                                Text("Back")
+                                    .font(.headline)
+                                    .foregroundColor(.white)
+                                    .padding(.vertical, 10)
+                                    .padding(.horizontal, 20)
+                                    .background(UMSSBrand.navy)
+                                    .cornerRadius(8)
+                            }
+                        }
+                        Spacer()
+                        if currentStep < totalSteps - 1 {
+                            Button(action: {
+                                withAnimation {
+                                    moveDirection = .trailing
+                                    currentStep += 1
+                                }
+                            }) {
+                                Text("Next")
+                                    .font(.headline)
+                                    .foregroundColor(.white)
+                                    .padding(.vertical, 10)
+                                    .padding(.horizontal, 20)
+                                    .background(UMSSBrand.gold)
+                                    .cornerRadius(8)
+                            }
+                        } else {
+                            Button(action: previewPDFAction) {
+                                if isGeneratingPDF {
+                                    ProgressView()
+                                } else {
+                                    Text("Preview PDF")
+                                        .font(.headline)
+                                        .foregroundColor(.white)
+                                        .padding(.vertical, 10)
+                                        .padding(.horizontal, 20)
+                                }
+                            }
+                            .background(UMSSBrand.gold)
+                            .cornerRadius(8)
+                            
+                            Text(uploadStatus)
+                                .foregroundColor(.blue)
+                                .padding()
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 10)
+                    .background(Color.white)
+                    .shadow(color: Color.black.opacity(0.2), radius: 5, x: 0, y: -2)
                 }
             }
             .navigationBarHidden(true)
+            .navigationViewStyle(StackNavigationViewStyle())
             .sheet(isPresented: $showPDFPreview) {
                 Group {
                     if let pdfDocument = pdfDocument {
                         PDFPreviewView(pdfDocument: pdfDocument, onUpload: {
-                            // Write the PDF to a temporary URL and upload it.
-                            guard let pdfData = pdfDocument.dataRepresentation() else {
-                                uploadStatus = "Failed to get PDF data."
-                                return .failure(DriveUploaderError.fileDataUnavailable)
-                            }
-                            let dateFormatter = DateFormatter()
-                            dateFormatter.dateFormat = "yyyy-MM-dd_HH-mm"
-                            let timestamp = dateFormatter.string(from: Date())
-
-                            let patientName = "\(viewModel.patientForm.firstName)_\(viewModel.patientForm.lastName)".replacingOccurrences(of: " ", with: "_")
-
-                            let fileName = "UMSS_Intake_\(timestamp)_\(patientName).pdf"
-                            let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
-                            do {
-                                try pdfData.write(to: tempURL)
-                            } catch {
-                                uploadStatus = "Failed to write PDF to temporary file: \(error.localizedDescription)"
-                                return .failure(error)
-                            }
-                            guard let token = accessToken else {
-                                uploadStatus = "No access token available."
-                                return .failure(DriveUploaderError.invalidResponse)
-                            }
-                            uploadStatus = "Uploading PDF..."
-                            uploadFileToDrive(fileURL: tempURL, accessToken: token, folderID: folderID) { result in
-                                DispatchQueue.main.async {
-                                    switch result {
-                                    case .success(let fileID):
-                                        uploadStatus = "Upload successful. File ID: \(fileID)"
-                                    case .failure(let error):
-                                        uploadStatus = "Upload error: \(error)"
-                                    }
-                                }
-                            }
-                            // Return success immediately since the asynchronous operation will complete later.
+                            handleUpload()
                             return .success(())
                         })
                     } else {
@@ -265,6 +220,10 @@ struct ContentView: View {
         }
         .navigationViewStyle(StackNavigationViewStyle())
     }
+
+
+
+
     
     // MARK: - Navigation Button Subview
     @ViewBuilder
@@ -1107,36 +1066,12 @@ struct SignatureStep: View {
     /// Holds the user's signature image.
     @Binding var signatureImage: UIImage?
     
-    // We are removing the date text field per your request, so no `date` binding is needed.
-    
-    /// The PencilKit canvas
+    // PencilKit canvas state
     @State private var canvasView = PKCanvasView()
     
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
-                Text("DISCLAIMER OF MEDICAL INFORMATION AUTHORIZATION")
-                    .font(.headline)
-                // Disclaimers / Authorization Text
-                Text("I have read and understand the Alert for Electronic Communications and agree that e-mail messages may include protected health information about me / the patient whenever necessary.\n\nMy signature on this Authorization indicates that I am giving permission for the uses and disclosures of the protected health information described above. The facility, its employees, officers, and physicians are hereby released from any legal responsibility or liability for disclosures of the above information to the extent indicated and authorized herein.\n\nI understand this authorization may be revoked in writing at any time, except to the extent that action has been taken in reliance on this authorization. Unless otherwise revoked in writing, this authorization will expire 1 year from the date of execution. A photocopy or FAX of this document is valid as the original.\n\nLIABILITY WAIVER: This liability waiver is a LEGAL DOCUMENT. This liability waiver is a “catch all”. By signing this waiver, you or your representative acknowledge that you or your representative WILL NOT seek civil or federal penalties or compensation in any court in the event of injury or death incurred while in the facility/facility premises against the aforementioned owner / tenant of the facility.\n\nTo the best of my knowledge the above information is complete and accurate.")
-                    .font(.subheadline)
-                    .foregroundColor(.primary)
-                    .padding(.horizontal)
-                
-                // Acknowledgement Section
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("ACKNOWLEDGEMENT AND AUTHORIZATION:")
-                        .font(.headline)
-                    Text(" - I have read and understand the HIPAA/Privacy Policy for United Medical and Social Services Clinic")
-                    Text(" - I authorize United Medical and Social Services Clinic to obtain/have access to my medication history")
-                    Text(" - I authorize my provider’s office to contact me by my mobile phone")
-                }
-                .font(.subheadline)
-                .foregroundColor(.primary)
-                .padding(.horizontal)
-                
-                Divider().padding(.vertical, 10)
-                
                 Text("Signature")
                     .font(.title2)
                     .fontWeight(.semibold)
@@ -1162,10 +1097,7 @@ struct SignatureStep: View {
                     
                     Button("Save Signature") {
                         // Extract an image from the drawing
-                        let image = canvasView.drawing
-                            .image(from: canvasView.bounds, scale: 1.0)
-                        
-                        // Store the image in your binding
+                        let image = canvasView.drawing.image(from: canvasView.bounds, scale: 1.0)
                         signatureImage = image
                     }
                     .padding(.vertical, 8)
@@ -1178,6 +1110,7 @@ struct SignatureStep: View {
             }
             .padding(.top, 20)
         }
+        .scrollDisabled(true)  // Disable scrolling
         .frame(maxWidth: .infinity)
         .background(Color.white.ignoresSafeArea())
     }
