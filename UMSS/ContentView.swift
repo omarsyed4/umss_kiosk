@@ -31,6 +31,9 @@ struct ContentView: View {
     // Total steps (adjust as needed)
     private var totalSteps: Int { 5 }
 
+    // State for showing reset confirmation
+    @State private var showResetConfirmation: Bool = false
+
     // MARK: - Validation for the current step
     private var isCurrentStepValid: Bool {
         switch currentStep {
@@ -307,10 +310,20 @@ struct ContentView: View {
                 }
                 .background(UMSSBrand.gold)
                 .cornerRadius(8)
+
+                Button(action: {
+                    showResetConfirmation = true
+                }) {
+                    Text("Reset")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .padding(.vertical, 10)
+                        .padding(.horizontal, 20)
+                }
+                .background(UMSSBrand.navy)
+                .cornerRadius(8)
+
                 
-                Text(uploadStatus)
-                    .foregroundColor(.blue)
-                    .padding()
             }
         }
         .padding(.horizontal, 20)
@@ -334,6 +347,7 @@ struct ContentView: View {
         }
     }
     
+    // Generate the PDF and show the preview
     private func generateAndShowPDF() {
         // Generate the PDF using your view model.
         let generatedPDF = viewModel.generateFilledPDF()
@@ -342,6 +356,57 @@ struct ContentView: View {
         showPDFPreview = true
     }
     
+    // Reset the form and state
+    private func resetForm() {
+        // Reset basic info
+        viewModel.patientForm.email = ""
+        viewModel.patientForm.firstName = ""
+        viewModel.patientForm.lastName = ""
+        viewModel.patientForm.dob = ""
+        viewModel.patientForm.age = ""
+        viewModel.patientForm.phone = ""
+        viewModel.patientForm.reasonForVisit = ""
+        viewModel.patientForm.isExistingPatient = false
+        
+        // Reset demographics
+        viewModel.patientForm.selectedGender = ""
+        viewModel.patientForm.selectedRace = ""
+        viewModel.patientForm.selectedMaritalStatus = ""
+        viewModel.patientForm.selectedEthnicity = ""
+        viewModel.patientForm.selectedIncome = ""
+        viewModel.patientForm.address = ""
+        
+        // Reset signature and address details
+        viewModel.patientForm.signatureImage = nil
+        viewModel.patientForm.rawAddress = ""
+        viewModel.patientForm.city = ""
+        viewModel.patientForm.state = ""
+        viewModel.patientForm.zip = ""
+        viewModel.patientForm.cityStateZip = ""
+        
+        // Reset additional demographic booleans/values
+        viewModel.patientForm.isMale = false
+        viewModel.patientForm.isFemale = false
+        viewModel.patientForm.isWhite = false
+        viewModel.patientForm.isBlack = false
+        viewModel.patientForm.isAsian = false
+        viewModel.patientForm.isAmIndian = false
+        viewModel.patientForm.isHispanic = false
+        viewModel.patientForm.isNonHispanic = false
+        viewModel.patientForm.isSingle = false
+        viewModel.patientForm.isMarried = false
+        viewModel.patientForm.isDivorced = false
+        viewModel.patientForm.isWidowed = false
+        viewModel.patientForm.selectedFamilySize = ""
+        viewModel.patientForm.selectedIncomeThreshold = ""
+        
+        // Reset other state as needed
+        currentStep = 0
+        uploadStatus = ""
+        pdfDocument = nil
+    }
+
+
     // Called from PDFPreviewView when the user taps Upload.
     private func handleUpload() {
         guard let pdfDocument = pdfDocument,
@@ -380,6 +445,10 @@ struct ContentView: View {
         }
     }
 }
+
+
+
+
 
 /// Formats a string of digits into (XXX) XXX-XXXX format.
 func formatPhoneNumber(_ number: String) -> String {
@@ -450,8 +519,9 @@ struct BasicInfoStepView: View {
                 
                 // MARK: - Basic Information Section (Names, DOB, Age)
                 SectionCard(title: "Basic Information") {
-                    VStack(spacing: 20) {
-                        HStack(spacing: 10) {
+                    // A single HStack containing First/Last Name and DOB side by side
+                    HStack(spacing: 20) {
+
                             TextField("First Name", text: $firstName)
                                 .padding(12)
                                 .background(Color.white)
@@ -460,7 +530,7 @@ struct BasicInfoStepView: View {
                                     RoundedRectangle(cornerRadius: 8)
                                         .stroke(Color.gray.opacity(0.5), lineWidth: 1)
                                 )
-                            
+
                             TextField("Last Name", text: $lastName)
                                 .padding(12)
                                 .background(Color.white)
@@ -469,43 +539,45 @@ struct BasicInfoStepView: View {
                                     RoundedRectangle(cornerRadius: 8)
                                         .stroke(Color.gray.opacity(0.5), lineWidth: 1)
                                 )
-                        }
                         
-                        HStack(spacing: 10) {
-                                    // Date of Birth Field
-                                    HStack(spacing: 10) {
-                                        Text("DOB")
-                                            .font(.headline)
-                                            .foregroundColor(.secondary)
-                                        DatePicker("", selection: $selectedDate, displayedComponents: .date)
-                                            .datePickerStyle(CompactDatePickerStyle())
-                                            .labelsHidden()
-                                            .onChange(of: selectedDate) { newValue in
-                                                // Update dob as formatted string
-                                                let formatter = DateFormatter()
-                                                formatter.dateFormat = "MM/dd/yyyy"
-                                                dob = formatter.string(from: newValue)
-                                                
-                                                // Calculate age from the selected date
-                                                let now = Date()
-                                                let ageComponents = Calendar.current.dateComponents([.year], from: newValue, to: now)
-                                                age = "\(ageComponents.year ?? 0)"
-                                            }
+
+                        // DOB Field
+                        VStack(spacing: 10) {
+                            HStack(spacing: 10) {
+                                Text("DOB")
+                                    .font(.headline)
+                                    .foregroundColor(.secondary)
+                                DatePicker("", selection: $selectedDate, displayedComponents: .date)
+                                    .datePickerStyle(CompactDatePickerStyle())
+                                    .labelsHidden()
+                                    .onChange(of: selectedDate) { newValue in
+                                        // Update dob as formatted string
+                                        let formatter = DateFormatter()
+                                        formatter.dateFormat = "MM/dd/yyyy"
+                                        dob = formatter.string(from: newValue)
+                                        
+                                        // Calculate age from the selected date
+                                        let now = Date()
+                                        let ageComponents = Calendar.current.dateComponents([.year], from: newValue, to: now)
+                                        age = "\(ageComponents.year ?? 0)"
                                     }
-                                    .frame(maxWidth: .infinity)
-                                    .padding(12)
-                                    .background(Color.white)
-                                    .cornerRadius(8)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .stroke(Color.gray.opacity(0.5), lineWidth: 1)
-                                    )
-                                    
-                                }
-                                .padding()
-                            
+                            }
+                            .padding(12)
+                            .background(Color.white)
+                            .cornerRadius(8)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color.gray.opacity(0.5), lineWidth: 1)
+                            )
+
+                        }
+                        .frame(maxWidth: .infinity)
                     }
                 }
+                
+                
+                
+                
                 
                 // MARK: - New Contact Info Section (Email and Phone in One Row)
                 SectionCard(title: "Contact Info") {
