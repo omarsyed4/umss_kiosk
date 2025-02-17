@@ -128,15 +128,5 @@ struct GoogleAddressAutocompleteView: UIViewControllerRepresentable {
             viewController.dismiss(animated: true, completion: nil)
         }
 
-        // Optional: Turn the network activity indicator on/off.
-        func didRequestAutocompletePredictions(_ viewController: GMSAutocompleteViewController) {
-            print("[DEBUG] GoogleAddressAutocompleteView: Requesting autocomplete predictions")
-            UIApplication.shared.isNetworkActivityIndicatorVisible = true
-        }
-
-        func didUpdateAutocompletePredictions(_ viewController: GMSAutocompleteViewController) {
-            print("[DEBUG] GoogleAddressAutocompleteView: Updated autocomplete predictions")
-            UIApplication.shared.isNetworkActivityIndicatorVisible = false
-        }
     }
 }
