@@ -36,20 +36,32 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		0FDC23932D58775900CB988D /* Exceptions for "UMSS" folder in "UMSS" target */ = {
+		0F2C1B732D61599300839099 /* Exceptions for "UMSS" folder in "UMSS" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Info.plist,
+				Integrations/Info.plist,
+				UMSS.xcdatamodeld,
 			);
 			target = 0FA2AE7B2D4B122D0030AE83 /* UMSS */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		0F2C1B742D61599300839099 /* Exceptions for "UMSS" folder in "Compile Sources" phase from "UMSS" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = 0FA2AE782D4B122D0030AE83 /* Sources */;
+			membershipExceptions = (
+				UMSS.xcdatamodeld,
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		0FA2AE7E2D4B122D0030AE83 /* UMSS */ = {
+		0F2C1B5E2D61599300839099 /* UMSS */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				0FDC23932D58775900CB988D /* Exceptions for "UMSS" folder in "UMSS" target */,
+				0F2C1B732D61599300839099 /* Exceptions for "UMSS" folder in "UMSS" target */,
+				0F2C1B742D61599300839099 /* Exceptions for "UMSS" folder in "Compile Sources" phase from "UMSS" target */,
 			);
 			path = UMSS;
 			sourceTree = "<group>";
@@ -97,7 +109,7 @@
 		0FA2AE732D4B122D0030AE83 = {
 			isa = PBXGroup;
 			children = (
-				0FA2AE7E2D4B122D0030AE83 /* UMSS */,
+				0F2C1B5E2D61599300839099 /* UMSS */,
 				0FA2AE942D4B122E0030AE83 /* UMSSTests */,
 				0FA2AE9E2D4B122E0030AE83 /* UMSSUITests */,
 				0FA2AE7D2D4B122D0030AE83 /* Products */,
@@ -130,7 +142,7 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				0FA2AE7E2D4B122D0030AE83 /* UMSS */,
+				0F2C1B5E2D61599300839099 /* UMSS */,
 			);
 			name = UMSS;
 			packageProductDependencies = (
