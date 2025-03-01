@@ -8,6 +8,7 @@ target 'UMSS' do
   # Pods for UMSS
   pod 'Firebase/Core'
   pod 'Firebase/Firestore'
+  pod 'FirebaseFirestoreSwift'
   pod 'Firebase/Auth'  # If you need authentication
   pod 'Firebase/Storage'  # If you need to store files
 
