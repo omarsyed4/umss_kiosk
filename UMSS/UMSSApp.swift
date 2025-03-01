@@ -6,22 +6,15 @@
 //
 
 import SwiftUI
-import GooglePlaces
+import Firebase
 
 @main
 struct UMSSApp: App {
     
+    // Initialize Firebase when the app starts
     init() {
-        if let filePath = Bundle.main.path(forResource: "Secrets", ofType: "plist"),
-           let plist = NSDictionary(contentsOfFile: filePath),
-           let apiKey = plist["GoogleAPIKey"] as? String {
-            GMSPlacesClient.provideAPIKey(apiKey)
-            print("[DEBUG] API Key loaded from Secrets.plist")
-        } else {
-            print("[ERROR] Could not load API Key from Secrets.plist")
-        }
+        FirebaseApp.configure()
     }
-
     
     var body: some Scene {
         WindowGroup {

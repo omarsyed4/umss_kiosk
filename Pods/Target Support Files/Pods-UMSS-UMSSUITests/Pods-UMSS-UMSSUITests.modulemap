@@ -1,0 +1,6 @@
+framework module Pods_UMSS_UMSSUITests {
+  umbrella header "Pods-UMSS-UMSSUITests-umbrella.h"
+
+  export *
+  module * { export * }
+}

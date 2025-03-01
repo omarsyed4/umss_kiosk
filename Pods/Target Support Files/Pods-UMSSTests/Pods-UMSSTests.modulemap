@@ -1,0 +1,6 @@
+framework module Pods_UMSSTests {
+  umbrella header "Pods-UMSSTests-umbrella.h"
+
+  export *
+  module * { export * }
+}
