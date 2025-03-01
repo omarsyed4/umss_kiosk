@@ -8,6 +8,92 @@
 import SwiftUI
 import PDFKit
 import PencilKit
+import FirebaseFirestore
+
+// Office Model - Modified to work without FirebaseFirestoreSwift
+struct Office: Identifiable, Codable {
+    var id: String?
+    let name: String
+    let address: String
+    let phone: String
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case address
+        case phone
+    }
+}
+
+// Office ViewModel
+class OfficeViewModel: ObservableObject {
+    @Published var offices: [Office] = []
+    @Published var isLoading = false
+    @Published var errorMessage: String?
+    
+    private var db = Firestore.firestore()
+    
+    func fetchOffices() {
+        isLoading = true
+        errorMessage = nil
+        
+        print("Fetching offices from Firestore...")
+        
+        db.collection("offices").getDocuments { [weak self] (snapshot, error) in
+            guard let self = self else { return }
+            
+            DispatchQueue.main.async {
+                self.isLoading = false
+                
+                if let error = error {
+                    self.errorMessage = "Failed to fetch offices: \(error.localizedDescription)"
+                    print("Firestore error: \(error.localizedDescription)")
+                    return
+                }
+                
+                guard let snapshot = snapshot else {
+                    self.errorMessage = "No snapshot returned"
+                    print("No snapshot returned from Firestore")
+                    return
+                }
+                
+                print("Firestore returned \(snapshot.documents.count) documents")
+                
+                if snapshot.documents.isEmpty {
+                    self.errorMessage = "No office documents found"
+                    print("Firestore returned empty documents array")
+                    return
+                }
+                
+                // Debug: Print document data
+                for doc in snapshot.documents {
+                    print("Document ID: \(doc.documentID), Data: \(doc.data())")
+                }
+                
+                // Modified to work without FirebaseFirestoreSwift
+                self.offices = snapshot.documents.compactMap { document in
+                    let data = document.data()
+                    guard let name = data["name"] as? String,
+                          let address = data["address"] as? String,
+                          let phone = data["phone"] as? String else {
+                        print("Error parsing document \(document.documentID): missing required fields")
+                        return nil
+                    }
+                    
+                    var office = Office(id: document.documentID, name: name, address: address, phone: phone)
+                    return office
+                }
+                
+                print("Successfully decoded \(self.offices.count) offices")
+                
+                // If we parsed 0 offices but had documents, there's a decoding issue
+                if self.offices.isEmpty && !snapshot.documents.isEmpty {
+                    self.errorMessage = "Error parsing office data"
+                }
+            }
+        }
+    }
+}
 
 struct ContentView: View {
     // Navigation and form state
@@ -20,6 +106,9 @@ struct ContentView: View {
     @State private var showPDFPreview = false
     @State private var isGeneratingPDF = false
     @State private var pdfDocument: PDFDocument?
+    
+    // Office view model
+    @StateObject private var officeViewModel = OfficeViewModel()
     
     // Upload service state
     @State private var accessToken: String?
@@ -87,9 +176,42 @@ struct ContentView: View {
                                             .font(.largeTitle)
                                             .fontWeight(.bold)
                                             .foregroundColor(UMSSBrand.navy)
-                                        Text("Welcome to the intake process.\nTap Next to get started.")
+                                        Text("Welcome to the intake process.\nPlease select an office location:")
                                             .multilineTextAlignment(.center)
                                             .foregroundColor(.primary)
+                                        
+                                        // Office selection section
+                                        if officeViewModel.isLoading {
+                                            ProgressView("Loading offices...")
+                                                .padding()
+                                        } else if let errorMessage = officeViewModel.errorMessage {
+                                            Text(errorMessage)
+                                                .foregroundColor(.red)
+                                                .padding()
+                                        } else if officeViewModel.offices.isEmpty {
+                                            Text("No offices available")
+                                                .foregroundColor(.gray)
+                                                .padding()
+                                        } else {
+                                            VStack(alignment: .leading, spacing: 10) {
+                                                ForEach(officeViewModel.offices) { office in
+                                                    OfficeSelectionRow(
+                                                        office: office,
+                                                        isSelected: viewModel.patientModel.selectedOfficeId == office.id
+                                                    ) {
+                                                        viewModel.patientModel.selectedOfficeId = office.id
+                                                        viewModel.patientModel.selectedOfficeName = office.name
+                                                        viewModel.patientModel.selectedOfficeAddress = office.address
+                                                        viewModel.patientModel.selectedOfficePhone = office.phone
+                                                    }
+                                                }
+                                            }
+                                            .padding()
+                                            .background(
+                                                RoundedRectangle(cornerRadius: 12)
+                                                    .fill(Color(.systemGray6))
+                                            )
+                                        }
                                     }
                                 }
                                 // Step 1 – Basic Info
@@ -250,6 +372,10 @@ struct ContentView: View {
                     cityStateZip: $viewModel.patientModel.cityStateZip,
                     isPresented: $isAddressPickerPresented
                 )
+            }
+            .onAppear {
+                // Fetch offices when the view appears
+                officeViewModel.fetchOffices()
             }
         }
         .navigationViewStyle(StackNavigationViewStyle())
@@ -1266,3 +1392,49 @@ struct ActionButton: View {
         }
     }
 }
+
+// Office Selection Row
+struct OfficeSelectionRow: View {
+    let office: Office
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(office.name)
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                    
+                    Text(office.address)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                    
+                    Text(office.phone)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+                
+                Spacer()
+                
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.blue)
+                        .font(.title3)
+                }
+            }
+            .padding()
+            .background(
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(isSelected ? Color.blue.opacity(0.1) : Color.white)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(isSelected ? Color.blue : Color.gray.opacity(0.3), lineWidth: isSelected ? 2 : 1)
+            )
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+}
+

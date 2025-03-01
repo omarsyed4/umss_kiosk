@@ -6,6 +6,8 @@
 //
 
 import SwiftUI
+import Foundation
+import UIKit
 
 /// Model struct that holds the user's input data
 struct PatientModel {
@@ -74,6 +76,12 @@ struct PatientModel {
         return formatter.string(from: Date())
     }()
     var signatureImage: UIImage? = nil
+
+    // Office selection
+    var selectedOfficeId: String?
+    var selectedOfficeName: String = ""
+    var selectedOfficeAddress: String = ""
+    var selectedOfficePhone: String = ""
 
     // MARK: - Computed Properties for Readable Strings
 
