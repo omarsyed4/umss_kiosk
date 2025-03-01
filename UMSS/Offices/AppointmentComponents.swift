@@ -66,6 +66,27 @@ struct AppointmentRow: View {
             }
             
             Spacer()
+            
+            // Additional status indicators for the new properties
+            HStack(spacing: 4) {
+                if appointment.isCheckedIn == "true" {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.green)
+                        .font(.caption)
+                }
+                
+                if appointment.seenDoctor == "true" {
+                    Image(systemName: "stethoscope")
+                        .foregroundColor(.blue)
+                        .font(.caption)
+                }
+                
+                if appointment.vitalsDone == "true" {
+                    Image(systemName: "heart.fill")
+                        .foregroundColor(.red)
+                        .font(.caption)
+                }
+            }
         }
         .padding()
         .background(
