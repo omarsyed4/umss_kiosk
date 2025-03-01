@@ -58,13 +58,12 @@ class OfficeViewModel: ObservableObject {
                 self.offices = snapshot.documents.compactMap { document in
                     let data = document.data()
                     guard let name = data["name"] as? String,
-                          let address = data["address"] as? String,
-                          let phone = data["phone"] as? String else {
+                          let address = data["address"] as? String else {
                         print("Error parsing document \(document.documentID): missing required fields")
                         return nil
                     }
                     
-                    var office = Office(id: document.documentID, name: name, address: address, phone: phone)
+                    var office = Office(id: document.documentID, name: name, address: address)
                     return office
                 }
                 
@@ -168,8 +167,7 @@ class AppointmentViewModel: ObservableObject {
             let office = Office(
                 id: document.documentID,
                 name: data["name"] as? String ?? "Unknown Office",
-                address: data["address"] as? String ?? "No Address",
-                phone: data["phone"] as? String ?? "No Phone"
+                address: data["address"] as? String ?? "No Address"
             )
             
             // Now fetch the appointments

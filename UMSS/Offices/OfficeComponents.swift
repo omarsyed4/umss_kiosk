@@ -7,48 +7,33 @@
 
 import SwiftUI
 
-// Office Selection Row
-struct OfficeSelectionRow: View {
+// Office Display Row (non-interactive)
+struct OfficeDisplayRow: View {
     let office: Office
-    let isSelected: Bool
-    let action: () -> Void
     
     var body: some View {
-        Button(action: action) {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(office.name)
-                        .font(.headline)
-                        .foregroundColor(.primary)
-                    
-                    Text(office.address)
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                    
-                    Text(office.phone)
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                }
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(office.name)
+                    .font(.headline)
+                    .foregroundColor(.primary)
                 
-                Spacer()
-                
-                if isSelected {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.blue)
-                        .font(.title3)
-                }
+                Text(office.address)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
             }
-            .padding()
-            .background(
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(isSelected ? Color.blue.opacity(0.1) : Color.white)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 10)
-                    .stroke(isSelected ? Color.blue : Color.gray.opacity(0.3), lineWidth: isSelected ? 2 : 1)
-            )
+            
+            Spacer()
         }
-        .buttonStyle(PlainButtonStyle())
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(Color.white)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+        )
     }
 }
 
@@ -61,8 +46,6 @@ struct OfficeInfoView: View {
                 .font(.title3)
                 .fontWeight(.bold)
             Text(office.address)
-                .font(.subheadline)
-            Text(office.phone)
                 .font(.subheadline)
         }
         .padding()

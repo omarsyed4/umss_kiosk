@@ -13,13 +13,11 @@ struct Office: Identifiable, Codable {
     var id: String?
     let name: String
     let address: String
-    let phone: String
     
     enum CodingKeys: String, CodingKey {
         case id
         case name
         case address
-        case phone
     }
 }
 
