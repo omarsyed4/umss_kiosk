@@ -178,10 +178,11 @@ class AppointmentViewModel: ObservableObject {
     }
     
     private func fetchAppointments(officeId: String, office: Office) {
+        // Remove or replace the old ".whereField("date", isEqualTo: todayDate)" code:
         db.collection("offices").document(officeId).collection("appointments")
             .getDocuments { [weak self] (snapshot, error) in
                 guard let self = self else { return }
-                
+    
                 DispatchQueue.main.async {
                     self.isLoading = false
                     
@@ -195,23 +196,48 @@ class AppointmentViewModel: ObservableObject {
                         return
                     }
                     
-                    // Process appointments
+                    // Check each document's dateTime field
                     self.appointments = snapshot.documents.compactMap { doc in
                         let data = doc.data()
+                        
+                        // Read dateTime from Firestore
+                        guard let dateTime = data["dateTime"] as? Timestamp else {
+                            return nil
+                        }
+                        
+                        let appointmentDate = dateTime.dateValue()
+                        
+                        // Only include appointments for today's date
+                        guard Calendar.current.isDate(appointmentDate, inSameDayAs: Date()) else {
+                            return nil
+                        }
+                        
+                        // Format date to "yyyy-MM-dd"
+                        let dateFormatter = DateFormatter()
+                        dateFormatter.dateFormat = "yyyy-MM-dd"
+                        let parsedDate = dateFormatter.string(from: appointmentDate)
+    
+                        // Format time to "HH:mm"
+                        let timeFormatter = DateFormatter()
+                        timeFormatter.dateFormat = "HH:mm"
+                        let parsedTime = timeFormatter.string(from: appointmentDate)
+                        
+                        // Build the new Appointment
                         return Appointment(
                             id: doc.documentID,
-                            time: data["dateTime"] as? String ?? "Unknown Time",
-                            patientName: data["patientName"] as? String,
-                            status: data["status"] as? String ?? "Available",
-                            notes: data["notes"] as? String
+                            time: parsedTime,
+                            date: parsedDate,
+                            patientId: data["patientId"] as? String ?? "",
+                            booked: data["booked"] as? String ?? "false",
+                            isCheckedIn: data["isCheckedIn"] as? String ?? "false",
+                            seenDoctor: data["seenDoctor"] as? String ?? "false",
+                            vitalsDone: data["vitalsDone"] as? String
                         )
                     }
                     
-                    // Sort appointments by time
+                    // Sort and assign
                     self.appointments.sort { $0.time < $1.time }
-                    
                     self.todaysOffice = office
-                    print("Fetched \(self.appointments.count) appointments for \(office.name)")
                 }
             }
     }

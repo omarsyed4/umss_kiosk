@@ -39,4 +39,35 @@ struct Appointment: Identifiable {
     var isCheckedIn: String
     var seenDoctor: String
     var vitalsDone: String?
+    
+    // Computed properties for compatibility
+    var status: String {
+        if booked == "true" {
+            return "Booked"
+        } else {
+            return "Available"
+        }
+    }
+    
+    var patientName: String? {
+        return patientId.isEmpty ? nil : patientId
+    }
+    
+    var notes: String? {
+        var noteComponents = [String]()
+        
+        if isCheckedIn == "true" {
+            noteComponents.append("Checked In")
+        }
+        
+        if seenDoctor == "true" {
+            noteComponents.append("Seen Doctor")
+        }
+        
+        if let vitals = vitalsDone, vitals == "true" {
+            noteComponents.append("Vitals Done")
+        }
+        
+        return noteComponents.isEmpty ? nil : noteComponents.joined(separator: ", ")
+    }
 }
