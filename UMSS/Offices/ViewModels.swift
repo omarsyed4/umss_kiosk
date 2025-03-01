@@ -219,8 +219,9 @@ class AppointmentViewModel: ObservableObject {
     
                         // Format time to "HH:mm"
                         let timeFormatter = DateFormatter()
-                        timeFormatter.dateFormat = "HH:mm"
+                        timeFormatter.dateFormat = "h:mm a"
                         let parsedTime = timeFormatter.string(from: appointmentDate)
+
                         
                         // Build the new Appointment
                         return Appointment(
