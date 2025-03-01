@@ -152,7 +152,10 @@ struct ContentView: View {
                                                             .padding()
                                                     } else {
                                                         AppointmentListView(
-                                                            appointments: appointmentVM.appointments
+                                                            appointments: appointmentVM.appointments,
+                                                            onAppointmentSelected: { appointment in
+                                                                handleAppointmentSelection(appointment)
+                                                            }
                                                         )
                                                     }
                                                 }
@@ -163,37 +166,6 @@ struct ContentView: View {
                                                 )
                                             }
                                             
-                                            Divider()
-                                                .padding(.vertical, 20)
-                                            
-                                            Text("Or select an office location:")
-                                                .font(.headline)
-                                                .multilineTextAlignment(.center)
-                                            
-                                            // Keep the original office selection UI
-                                            if officeViewModel.isLoading {
-                                                ProgressView("Loading offices...")
-                                                    .padding()
-                                            } else if let errorMessage = officeViewModel.errorMessage {
-                                                Text(errorMessage)
-                                                    .foregroundColor(.red)
-                                                    .padding()
-                                            } else if officeViewModel.offices.isEmpty {
-                                                Text("No offices available")
-                                                    .foregroundColor(.gray)
-                                                    .padding()
-                                            } else {
-                                                VStack(alignment: .leading, spacing: 10) {
-                                                    ForEach(officeViewModel.offices) { office in
-                                                        OfficeDisplayRow(office: office)
-                                                    }
-                                                }
-                                                .padding()
-                                                .background(
-                                                    RoundedRectangle(cornerRadius: 12)
-                                                        .fill(Color(.systemGray6))
-                                                )
-                                            }
                                         }
                                     }
                                 }
@@ -553,6 +525,36 @@ struct ContentView: View {
                 case .failure(let error):
                     uploadStatus = "Upload error: \(error)"
                 }
+            }
+        }
+    }
+
+    // Add this function in the ContentView struct
+    private func handleAppointmentSelection(_ appointment: Appointment) {
+        // If the appointment is booked, try to load patient data
+        if appointment.booked == "true" && !appointment.patientId.isEmpty {
+            // TODO: Load existing patient data
+            print("Loading patient with ID: \(appointment.patientId)")
+            
+            // For now, just set the appointment ID in the view model
+            viewModel.patientModel.appointmentId = appointment.id
+            
+            // Navigate to the patient form
+            withAnimation {
+                moveDirection = .trailing
+                currentStep = 1  // Navigate to Basic Info step
+            }
+        } else {
+            // For walk-ins, start a new patient form and assign this appointment
+            viewModel.patientModel.appointmentId = appointment.id
+            
+            // Reset any existing patient data
+            viewModel.resetPatientData()
+            
+            // Navigate to the patient form
+            withAnimation {
+                moveDirection = .trailing
+                currentStep = 1  // Navigate to Basic Info step
             }
         }
     }

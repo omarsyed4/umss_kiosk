@@ -230,7 +230,7 @@ class AppointmentViewModel: ObservableObject {
                             booked: data["booked"] as? String ?? "false",
                             isCheckedIn: data["isCheckedIn"] as? String ?? "false",
                             seenDoctor: data["seenDoctor"] as? String ?? "false",
-                            vitalsDone: data["vitalsDone"] as? String
+                            vitalsDone: data["vitalsDone"] as? String ?? "false"
                         )
                     }
                     
