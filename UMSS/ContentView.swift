@@ -10,7 +10,7 @@ import PDFKit
 import PencilKit
 import FirebaseFirestore
 
-// Office Model - Modified to work without FirebaseFirestoreSwift
+// Office Model
 struct Office: Identifiable, Codable {
     var id: String?
     let name: String
@@ -95,6 +95,159 @@ class OfficeViewModel: ObservableObject {
     }
 }
 
+// Models for the appointments feature
+struct AppointmentDay {
+    var id: String
+    var date: String
+    var officeId: String
+}
+
+struct Appointment: Identifiable {
+    var id: String
+    var time: String
+    var patientName: String?
+    var status: String
+    var notes: String?
+}
+
+// Appointments ViewModel
+class AppointmentViewModel: ObservableObject {
+    @Published var isLoading = true
+    @Published var errorMessage: String?
+    @Published var todaysOffice: Office?
+    @Published var appointments: [Appointment] = []
+    @Published var isClinicDay = false
+    @Published var selectedOfficeId: String?
+    
+    private var db = Firestore.firestore()
+    
+    func checkForTodayClinic() {
+        isLoading = true
+        errorMessage = nil
+        
+        // Format today's date as m-d-yy
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "M-d-yy"
+        let todayString = dateFormatter.string(from: Date())
+        
+        print("Checking if today (\(todayString)) is a clinic day...")
+        
+        // Query the days collection for today's date
+        db.collection("days").document(todayString).getDocument { [weak self] (document, error) in
+            guard let self = self else { return }
+            
+            if let error = error {
+                DispatchQueue.main.async {
+                    self.isLoading = false
+                    self.errorMessage = "Error checking clinic day: \(error.localizedDescription)"
+                    print("Firestore error: \(error.localizedDescription)")
+                }
+                return
+            }
+            
+            guard let document = document, document.exists else {
+                DispatchQueue.main.async {
+                    self.isLoading = false
+                    self.isClinicDay = false
+                    print("Today is not a clinic day")
+                }
+                return
+            }
+            
+            // Today is a clinic day
+            guard let data = document.data(), let officeId = data["officeId"] as? String else {
+                DispatchQueue.main.async {
+                    self.isLoading = false
+                    self.errorMessage = "Invalid day document format"
+                    print("Day document doesn't contain officeId")
+                }
+                return
+            }
+            
+            print("Today is a clinic day at office ID: \(officeId)")
+            self.selectedOfficeId = officeId
+            self.isClinicDay = true
+            
+            // Now fetch the office and its appointments
+            self.fetchOfficeAndAppointments(officeId: officeId)
+        }
+    }
+    
+    private func fetchOfficeAndAppointments(officeId: String) {
+        // First, get the office details
+        db.collection("offices").document(officeId).getDocument { [weak self] (document, error) in
+            guard let self = self else { return }
+            
+            if let error = error {
+                DispatchQueue.main.async {
+                    self.isLoading = false
+                    self.errorMessage = "Error fetching office: \(error.localizedDescription)"
+                }
+                return
+            }
+            
+            guard let document = document, document.exists else {
+                DispatchQueue.main.async {
+                    self.isLoading = false
+                    self.errorMessage = "Office not found"
+                }
+                return
+            }
+            
+            // Parse office data
+            let data = document.data() ?? [:]
+            let office = Office(
+                id: document.documentID,
+                name: data["name"] as? String ?? "Unknown Office",
+                address: data["address"] as? String ?? "No Address",
+                phone: data["phone"] as? String ?? "No Phone"
+            )
+            
+            // Now fetch the appointments
+            self.fetchAppointments(officeId: officeId, office: office)
+        }
+    }
+    
+    private func fetchAppointments(officeId: String, office: Office) {
+        db.collection("offices").document(officeId).collection("appointments")
+            .getDocuments { [weak self] (snapshot, error) in
+                guard let self = self else { return }
+                
+                DispatchQueue.main.async {
+                    self.isLoading = false
+                    
+                    if let error = error {
+                        self.errorMessage = "Error fetching appointments: \(error.localizedDescription)"
+                        return
+                    }
+                    
+                    guard let snapshot = snapshot else {
+                        self.errorMessage = "No appointments data"
+                        return
+                    }
+                    
+                    // Process appointments
+                    self.appointments = snapshot.documents.compactMap { doc in
+                        let data = doc.data()
+                        return Appointment(
+                            id: doc.documentID,
+                            time: data["dateTime"] as? String ?? "Unknown Time",
+                            patientName: data["patientName"] as? String,
+                            status: data["status"] as? String ?? "Available",
+                            notes: data["notes"] as? String
+                        )
+                    }
+                    
+                    // Sort appointments by time
+                    self.appointments.sort { $0.time < $1.time }
+                    
+                    self.todaysOffice = office
+                    print("Fetched \(self.appointments.count) appointments for \(office.name)")
+                }
+            }
+    }
+}
+
 struct ContentView: View {
     // Navigation and form state
     @State private var currentStep: Int = 0
@@ -122,6 +275,9 @@ struct ContentView: View {
 
     // State for showing reset confirmation
     @State private var showResetConfirmation: Bool = false
+
+    // Add appointment view model
+    @StateObject private var appointmentVM = AppointmentViewModel()
 
     // MARK: - Validation for the current step
     private var isCurrentStepValid: Bool {
@@ -176,41 +332,90 @@ struct ContentView: View {
                                             .font(.largeTitle)
                                             .fontWeight(.bold)
                                             .foregroundColor(UMSSBrand.navy)
-                                        Text("Welcome to the intake process.\nPlease select an office location:")
-                                            .multilineTextAlignment(.center)
-                                            .foregroundColor(.primary)
                                         
-                                        // Office selection section
-                                        if officeViewModel.isLoading {
-                                            ProgressView("Loading offices...")
-                                                .padding()
-                                        } else if let errorMessage = officeViewModel.errorMessage {
-                                            Text(errorMessage)
-                                                .foregroundColor(.red)
-                                                .padding()
-                                        } else if officeViewModel.offices.isEmpty {
-                                            Text("No offices available")
-                                                .foregroundColor(.gray)
-                                                .padding()
-                                        } else {
-                                            VStack(alignment: .leading, spacing: 10) {
-                                                ForEach(officeViewModel.offices) { office in
-                                                    OfficeSelectionRow(
-                                                        office: office,
-                                                        isSelected: viewModel.patientModel.selectedOfficeId == office.id
-                                                    ) {
-                                                        viewModel.patientModel.selectedOfficeId = office.id
-                                                        viewModel.patientModel.selectedOfficeName = office.name
-                                                        viewModel.patientModel.selectedOfficeAddress = office.address
-                                                        viewModel.patientModel.selectedOfficePhone = office.phone
+                                        // Appointments section
+                                        VStack(spacing: 15) {
+                                            if appointmentVM.isLoading {
+                                                ProgressView("Checking today's clinic schedule...")
+                                                    .padding()
+                                            } else if let errorMessage = appointmentVM.errorMessage {
+                                                Text("Error: \(errorMessage)")
+                                                    .foregroundColor(.red)
+                                                    .padding()
+                                            } else if !appointmentVM.isClinicDay {
+                                                Text("Today is not a scheduled clinic day.")
+                                                    .font(.headline)
+                                                    .foregroundColor(.secondary)
+                                                    .padding()
+                                            } else if let office = appointmentVM.todaysOffice {
+                                                // Today is a clinic day at this office
+                                                VStack(alignment: .leading, spacing: 15) {
+                                                    Text("Today's Clinic")
+                                                        .font(.title2)
+                                                        .fontWeight(.semibold)
+                                                    
+                                                    OfficeInfoView(office: office)
+                                                        .padding(.vertical, 5)
+                                                    
+                                                    Text("Today's Appointment Slots")
+                                                        .font(.headline)
+                                                    
+                                                    if appointmentVM.appointments.isEmpty {
+                                                        Text("No appointments available")
+                                                            .foregroundColor(.secondary)
+                                                            .padding()
+                                                    } else {
+                                                        AppointmentListView(
+                                                            appointments: appointmentVM.appointments
+                                                        )
                                                     }
                                                 }
+                                                .padding()
+                                                .background(
+                                                    RoundedRectangle(cornerRadius: 12)
+                                                        .fill(Color(.systemGray6))
+                                                )
                                             }
-                                            .padding()
-                                            .background(
-                                                RoundedRectangle(cornerRadius: 12)
-                                                    .fill(Color(.systemGray6))
-                                            )
+                                            
+                                            Divider()
+                                                .padding(.vertical, 20)
+                                            
+                                            Text("Or select an office location:")
+                                                .font(.headline)
+                                                .multilineTextAlignment(.center)
+                                            
+                                            // Keep the original office selection UI
+                                            if officeViewModel.isLoading {
+                                                ProgressView("Loading offices...")
+                                                    .padding()
+                                            } else if let errorMessage = officeViewModel.errorMessage {
+                                                Text(errorMessage)
+                                                    .foregroundColor(.red)
+                                                    .padding()
+                                            } else if officeViewModel.offices.isEmpty {
+                                                Text("No offices available")
+                                                    .foregroundColor(.gray)
+                                                    .padding()
+                                            } else {
+                                                VStack(alignment: .leading, spacing: 10) {
+                                                    ForEach(officeViewModel.offices) { office in
+                                                        OfficeSelectionRow(
+                                                            office: office,
+                                                            isSelected: viewModel.patientModel.selectedOfficeId == office.id
+                                                        ) {
+                                                            viewModel.patientModel.selectedOfficeId = office.id
+                                                            viewModel.patientModel.selectedOfficeName = office.name
+                                                            viewModel.patientModel.selectedOfficeAddress = office.address
+                                                            viewModel.patientModel.selectedOfficePhone = office.phone
+                                                        }
+                                                    }
+                                                }
+                                                .padding()
+                                                .background(
+                                                    RoundedRectangle(cornerRadius: 12)
+                                                        .fill(Color(.systemGray6))
+                                                )
+                                            }
                                         }
                                     }
                                 }
@@ -376,6 +581,9 @@ struct ContentView: View {
             .onAppear {
                 // Fetch offices when the view appears
                 officeViewModel.fetchOffices()
+                
+                // Also check for today's clinic
+                appointmentVM.checkForTodayClinic()
             }
         }
         .navigationViewStyle(StackNavigationViewStyle())
@@ -1435,6 +1643,100 @@ struct OfficeSelectionRow: View {
             )
         }
         .buttonStyle(PlainButtonStyle())
+    }
+}
+
+// New Views for Appointments
+
+struct OfficeInfoView: View {
+    let office: Office
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(office.name)
+                .font(.title3)
+                .fontWeight(.bold)
+            Text(office.address)
+                .font(.subheadline)
+            Text(office.phone)
+                .font(.subheadline)
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.white)
+        .cornerRadius(10)
+    }
+}
+
+struct AppointmentListView: View {
+    let appointments: [Appointment]
+    
+    var body: some View {
+        VStack(spacing: 10) {
+            ForEach(appointments) { appointment in
+                AppointmentRow(appointment: appointment)
+            }
+        }
+    }
+}
+
+struct AppointmentRow: View {
+    let appointment: Appointment
+    
+    var statusColor: Color {
+        switch appointment.status.lowercased() {
+        case "available":
+            return .green
+        case "booked":
+            return .blue
+        case "cancelled":
+            return .red
+        default:
+            return .gray
+        }
+    }
+    
+    var body: some View {
+        HStack {
+            Text(appointment.time)
+                .font(.headline)
+                .foregroundColor(.primary)
+                .frame(width: 80, alignment: .leading)
+            
+            Divider()
+                .frame(height: 30)
+            
+            VStack(alignment: .leading) {
+                if let patientName = appointment.patientName, !patientName.isEmpty {
+                    Text(patientName)
+                        .font(.body)
+                    Text(appointment.status)
+                        .font(.caption)
+                        .foregroundColor(statusColor)
+                } else {
+                    Text(appointment.status)
+                        .font(.body)
+                        .foregroundColor(statusColor)
+                }
+                
+                if let notes = appointment.notes, !notes.isEmpty {
+                    Text(notes)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+            
+            Spacer()
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(Color.white)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(statusColor.opacity(0.3), lineWidth: 1)
+        )
     }
 }
 
