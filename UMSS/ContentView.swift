@@ -44,30 +44,51 @@ struct ContentView: View {
     // Add appointment view model
     @StateObject private var appointmentVM = AppointmentViewModel()
 
+    // MARK: - Validation Helper Methods
+    private func isBasicInfoValid() -> Bool {
+        let email = viewModel.patientModel.email.trimmingCharacters(in: .whitespaces)
+        let firstName = viewModel.patientModel.firstName.trimmingCharacters(in: .whitespaces)
+        let lastName = viewModel.patientModel.lastName.trimmingCharacters(in: .whitespaces)
+        let dob = viewModel.patientModel.dob.trimmingCharacters(in: .whitespaces)
+        let age = viewModel.patientModel.age.trimmingCharacters(in: .whitespaces)
+        let phone = viewModel.patientModel.phone.trimmingCharacters(in: .whitespaces)
+        let reasonForVisit = viewModel.patientModel.reasonForVisit.trimmingCharacters(in: .whitespaces)
+        
+        return !email.isEmpty && 
+               !firstName.isEmpty && 
+               !lastName.isEmpty && 
+               !dob.isEmpty && 
+               !age.isEmpty && 
+               !phone.isEmpty && 
+               !reasonForVisit.isEmpty
+    }
+    
+    private func isDemographicsValid() -> Bool {
+        let gender = viewModel.patientModel.selectedGender.trimmingCharacters(in: .whitespaces)
+        let race = viewModel.patientModel.selectedRace.trimmingCharacters(in: .whitespaces)
+        let maritalStatus = viewModel.patientModel.selectedMaritalStatus.trimmingCharacters(in: .whitespaces)
+        let ethnicity = viewModel.patientModel.selectedEthnicity.trimmingCharacters(in: .whitespaces)
+        let income = viewModel.patientModel.selectedIncome.trimmingCharacters(in: .whitespaces)
+        let address = viewModel.patientModel.address.trimmingCharacters(in: .whitespaces)
+        
+        return !gender.isEmpty && 
+               !race.isEmpty && 
+               !maritalStatus.isEmpty && 
+               !ethnicity.isEmpty && 
+               !income.isEmpty && 
+               !address.isEmpty
+    }
+
     // MARK: - Validation for the current step
     private var isCurrentStepValid: Bool {
         switch currentStep {
         case 0:
             return true
         case 1:
-            // Require basic info fields non-empty:
-            return !viewModel.patientModel.email.trimmingCharacters(in: .whitespaces).isEmpty &&
-                   !viewModel.patientModel.firstName.trimmingCharacters(in: .whitespaces).isEmpty &&
-                   !viewModel.patientModel.lastName.trimmingCharacters(in: .whitespaces).isEmpty &&
-                   !viewModel.patientModel.dob.trimmingCharacters(in: .whitespaces).isEmpty &&
-                   !viewModel.patientModel.age.trimmingCharacters(in: .whitespaces).isEmpty &&
-                   !viewModel.patientModel.phone.trimmingCharacters(in: .whitespaces).isEmpty &&
-                   !viewModel.patientModel.reasonForVisit.trimmingCharacters(in: .whitespaces).isEmpty
+            return isBasicInfoValid()
         case 2:
-            // Require demographics fields non-empty:
-            return !viewModel.patientModel.selectedGender.trimmingCharacters(in: .whitespaces).isEmpty &&
-                   !viewModel.patientModel.selectedRace.trimmingCharacters(in: .whitespaces).isEmpty &&
-                   !viewModel.patientModel.selectedMaritalStatus.trimmingCharacters(in: .whitespaces).isEmpty &&
-                   !viewModel.patientModel.selectedEthnicity.trimmingCharacters(in: .whitespaces).isEmpty &&
-                   !viewModel.patientModel.selectedIncome.trimmingCharacters(in: .whitespaces).isEmpty &&
-                   !viewModel.patientModel.address.trimmingCharacters(in: .whitespaces).isEmpty
+            return isDemographicsValid()
         case 3:
-            // Require a signature image:
             return viewModel.patientModel.signatureImage != nil
         default:
             return true
@@ -164,15 +185,7 @@ struct ContentView: View {
                                             } else {
                                                 VStack(alignment: .leading, spacing: 10) {
                                                     ForEach(officeViewModel.offices) { office in
-                                                        OfficeSelectionRow(
-                                                            office: office,
-                                                            isSelected: viewModel.patientModel.selectedOfficeId == office.id
-                                                        ) {
-                                                            viewModel.patientModel.selectedOfficeId = office.id
-                                                            viewModel.patientModel.selectedOfficeName = office.name
-                                                            viewModel.patientModel.selectedOfficeAddress = office.address
-                                                            viewModel.patientModel.selectedOfficePhone = office.phone
-                                                        }
+                                                        OfficeDisplayRow(office: office)
                                                     }
                                                 }
                                                 .padding()
