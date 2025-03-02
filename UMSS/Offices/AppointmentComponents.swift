@@ -76,33 +76,39 @@ struct AppointmentListView: View {
                     }
             }
             
-            // Available slots section
+            // Next Available Slot section (instead of showing all available slots)
             if !availableAppointments.isEmpty {
-                Text("Available Slots (For Walk-ins)")
+                Text("Next Available Slot")
                     .font(.headline)
                     .foregroundColor(.green)
                     .padding(.top, 10)
                     .onAppear {
-                        print("DEBUG: Rendering available appointments section with \(availableAppointments.count) appointments")
+                        print("DEBUG: Rendering next available slot from \(availableAppointments.count) available appointments")
                     }
                 
-                ForEach(availableAppointments) { appointment in
-                    AppointmentRow(
-                        appointment: appointment,
-                        isSelected: selectedAppointment?.id == appointment.id
-                    )
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        print("DEBUG: Selected available appointment: \(appointment.id) at \(appointment.time)")
-                        selectedAppointment = appointment
-                        onAppointmentSelected?(appointment)
-                    }
-                    .onAppear {
-                        print("DEBUG: Displayed available appointment row: \(appointment.id)")
-                    }
+                // Only show the first available slot (assuming already sorted by time)
+                let nextAvailable = availableAppointments.first!
+                AppointmentRow(
+                    appointment: nextAvailable,
+                    isSelected: selectedAppointment?.id == nextAvailable.id
+                )
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    print("DEBUG: Selected next available appointment: \(nextAvailable.id) at \(nextAvailable.time)")
+                    selectedAppointment = nextAvailable
+                    onAppointmentSelected?(nextAvailable)
                 }
+                .onAppear {
+                    print("DEBUG: Displayed next available slot: \(nextAvailable.id) at time \(nextAvailable.time)")
+                }
+                .padding(.bottom, 5)
+                
+                Text("Tap to select this slot for a walk-in appointment")
+                    .font(.caption)
+                    .foregroundColor(.gray)
+                    .padding(.bottom, 10)
             } else {
-                Text("No available appointments")
+                Text("No available slots")
                     .font(.caption)
                     .foregroundColor(.gray)
                     .onAppear {
@@ -150,8 +156,9 @@ struct AppointmentRow: View {
                 .frame(height: 30)
             
             VStack(alignment: .leading) {
-                if appointment.booked, !appointment.patientId.isEmpty {
-                    Text("Patient #\(appointment.patientId)")
+                if appointment.booked, appointment.patientName != nil {
+                    Text(appointment.patientName ?? "Unknown")
+                        .font(.headline)
                         .font(.body)
                     Text(statusText)
                         .font(.caption)
@@ -195,7 +202,7 @@ struct AppointmentRow: View {
             }
         }
         .padding()
-        .background(Color(.tertiarySystemGroupedBackground))
+        .background(Color.white)
         .cornerRadius(8)
         .overlay(
             RoundedRectangle(cornerRadius: 8)

@@ -93,10 +93,11 @@ class AppointmentViewModel: ObservableObject {
         isLoading = true
         errorMessage = nil
         
-        // Format today's date as m-d-yy
+        // Format yesterday's date as m-d-yy
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "M-d-yy"
-        let todayString = dateFormatter.string(from: Date())
+        let yesterday = Calendar.current.date(byAdding: .day, value: +3, to: Date())!
+        let todayString = dateFormatter.string(from: yesterday)
         
         print("Checking if today (\(todayString)) is a clinic day...")
         
@@ -195,20 +196,23 @@ class AppointmentViewModel: ObservableObject {
                     }
                     
                     // Check each document's dateTime field
-                    self.appointments = snapshot.documents.compactMap { doc in
+                    self.appointments = snapshot.documents.compactMap { doc -> Appointment? in
                         let data = doc.data()
                         
                         // Read dateTime from Firestore
                         guard let dateTime = data["dateTime"] as? Timestamp else {
+                            print("dateTime is nil for document \(doc.documentID)")
                             return nil
                         }
                         
                         let appointmentDate = dateTime.dateValue()
                         
-                        // Only include appointments for today's date
-                        guard Calendar.current.isDate(appointmentDate, inSameDayAs: Date()) else {
+                        // Only include appointments for today's date + 3 days
+                        let futureDate = Calendar.current.date(byAdding: .day, value: 3, to: Date())!
+                        guard Calendar.current.isDate(appointmentDate, inSameDayAs: futureDate) else {
                             return nil
                         }
+
                         
                         // Format date to "yyyy-MM-dd"
                         let dateFormatter = DateFormatter()
@@ -227,6 +231,7 @@ class AppointmentViewModel: ObservableObject {
                             time: parsedTime,
                             date: parsedDate,
                             patientId: data["patientId"] as? String ?? "",
+                            patientName: data["patientName"] as? String ?? "",
                             booked: data["booked"] as? Bool ?? false,
                             isCheckedIn: data["isCheckedIn"] as? Bool ?? false,
                             seenDoctor: data["seenDoctor"] as? Bool ?? false,
