@@ -10,6 +10,7 @@ import SwiftUI
 struct AppointmentListView: View {
     let appointments: [Appointment]
     @State private var selectedAppointment: Appointment?
+    @State private var showContinueButton: Bool = false  // Add state for button visibility
     var onAppointmentSelected: ((Appointment) -> Void)?
     
     init(appointments: [Appointment], onAppointmentSelected: ((Appointment) -> Void)? = nil) {
@@ -63,6 +64,11 @@ struct AppointmentListView: View {
                             print("DEBUG: Selected booked appointment: \(appointment.id) at \(appointment.time)")
                             selectedAppointment = appointment
                             onAppointmentSelected?(appointment)
+                            
+                            // Show continue button with animation when appointment is selected
+                            withAnimation(.easeIn(duration: 0.5)) {
+                                showContinueButton = true
+                            }
                         }
                         .onAppear {
                             print("DEBUG: Displayed booked appointment row: \(appointment.id) with patient \(appointment.patientId)")
@@ -110,6 +116,11 @@ struct AppointmentListView: View {
                         print("DEBUG: Selected next available appointment: \(nextAvailable.id) at \(nextAvailable.time)")
                         selectedAppointment = nextAvailable
                         onAppointmentSelected?(nextAvailable)
+                        
+                        // Show continue button with animation when appointment is selected
+                        withAnimation(.easeIn(duration: 0.5)) {
+                            showContinueButton = true
+                        }
                     }
                     .onAppear {
                         print("DEBUG: Displayed next available slot: \(nextAvailable.id) at time \(nextAvailable.time)")
@@ -138,6 +149,25 @@ struct AppointmentListView: View {
                 .background(Color(.systemGray6))
                 .cornerRadius(15)
             }
+            
+            // Continue Button that fades in
+            if showContinueButton {
+                Button(action: {
+                    // Proceed to the next step - we'll use the existing onAppointmentSelected
+                    // This has already been called when the appointment was selected
+                }) {
+                    Text("Continue")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(Color.blue)
+                        .cornerRadius(12)
+                        .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
+                }
+                .padding(.top, 20)
+                .transition(.opacity)
+            }
         }
         .padding(.horizontal)
         .onAppear {
@@ -146,6 +176,7 @@ struct AppointmentListView: View {
             print("DEBUG: Booked appointments: \(bookedAppointments.count)")
             print("DEBUG: Available appointments: \(availableAppointments.count)")
         }
+        .animation(.easeInOut, value: selectedAppointment != nil)
     }
 }
 
