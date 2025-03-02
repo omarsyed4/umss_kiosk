@@ -151,10 +151,6 @@ struct ContentView: View {
                                                     }
                                                 }
                                                 .padding()
-                                                .background(
-                                                    RoundedRectangle(cornerRadius: 12)
-                                                        .fill(Color(.systemGray6))
-                                                )
                                             }
                                             
                                         }
