@@ -151,12 +151,12 @@ struct AppointmentListView: View {
             }
             
             // Continue Button that fades in
-            if showContinueButton {
+            if showContinueButton, let selected = selectedAppointment {
                 Button(action: {
-                    // Proceed to the next step - we'll use the existing onAppointmentSelected
-                    // This has already been called when the appointment was selected
+                    // Call the appointment selected handler with the selected appointment
+                    onAppointmentSelected?(selected)
                 }) {
-                    Text("Continue")
+                    Text(selected.booked ? "Continue with Patient Data" : "Continue as Walk-in")
                         .font(.headline)
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
