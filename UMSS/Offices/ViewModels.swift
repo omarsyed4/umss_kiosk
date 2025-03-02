@@ -227,10 +227,10 @@ class AppointmentViewModel: ObservableObject {
                             time: parsedTime,
                             date: parsedDate,
                             patientId: data["patientId"] as? String ?? "",
-                            booked: data["booked"] as? String ?? "false",
-                            isCheckedIn: data["isCheckedIn"] as? String ?? "false",
-                            seenDoctor: data["seenDoctor"] as? String ?? "false",
-                            vitalsDone: data["vitalsDone"] as? String ?? "false"
+                            booked: data["booked"] as? Bool ?? false,
+                            isCheckedIn: data["isCheckedIn"] as? Bool ?? false,
+                            seenDoctor: data["seenDoctor"] as? Bool ?? false,
+                            vitalsDone: data["vitalsDone"] as? Bool ?? false
                         )
                     }
                     
