@@ -139,12 +139,7 @@ struct ContentView: View {
                                                     Text("Today's Clinic")
                                                         .font(.title2)
                                                         .fontWeight(.semibold)
-                                                    
-                                                    OfficeInfoView(office: office)
-                                                        .padding(.vertical, 5)
-                                                    
-                                                    Text("Today's Appointment Slots")
-                                                        .font(.headline)
+                                                                                                        
                                                     
                                                     if appointmentVM.appointments.isEmpty {
                                                         Text("No appointments available")

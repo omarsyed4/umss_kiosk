@@ -33,6 +33,7 @@ struct Appointment: Identifiable {
     var time: String
     var date: String
     var patientId: String
+    var patientName: String
     var booked: Bool
     var isCheckedIn: Bool
     var seenDoctor: Bool
@@ -42,9 +43,6 @@ struct Appointment: Identifiable {
         booked ? "Booked" : "Available"
     }
 
-    var patientName: String? {
-        return patientId.isEmpty ? nil : patientId
-    }
 
     var notes: String? {
         var noteComponents = [String]()
