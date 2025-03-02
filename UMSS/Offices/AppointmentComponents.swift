@@ -41,81 +41,105 @@ struct AppointmentListView: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 15) {
+        VStack(alignment: .leading, spacing: 20) {
             // Booked appointments section
             if !bookedAppointments.isEmpty {
-                Text("Booked Appointments")
-                    .font(.headline)
-                    .foregroundColor(.blue)
-                    .padding(.top, 5)
-                    .onAppear {
-                        print("DEBUG: Rendering booked appointments section with \(bookedAppointments.count) appointments")
-                    }
-                
-                ForEach(bookedAppointments) { appointment in
-                    AppointmentRow(
-                        appointment: appointment,
-                        isSelected: selectedAppointment?.id == appointment.id
-                    )
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        print("DEBUG: Selected booked appointment: \(appointment.id) at \(appointment.time)")
-                        selectedAppointment = appointment
-                        onAppointmentSelected?(appointment)
-                    }
-                    .onAppear {
-                        print("DEBUG: Displayed booked appointment row: \(appointment.id) with patient \(appointment.patientId)")
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Booked Appointments")
+                        .font(.headline)
+                        .foregroundColor(.blue)
+                        .padding(.top, 5)
+                        .onAppear {
+                            print("DEBUG: Rendering booked appointments section with \(bookedAppointments.count) appointments")
+                        }
+                    
+                    ForEach(bookedAppointments) { appointment in
+                        AppointmentRow(
+                            appointment: appointment,
+                            isSelected: selectedAppointment?.id == appointment.id
+                        )
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            print("DEBUG: Selected booked appointment: \(appointment.id) at \(appointment.time)")
+                            selectedAppointment = appointment
+                            onAppointmentSelected?(appointment)
+                        }
+                        .onAppear {
+                            print("DEBUG: Displayed booked appointment row: \(appointment.id) with patient \(appointment.patientId)")
+                        }
                     }
                 }
+                .padding()
+                .background(Color(.systemGray6))
+                .cornerRadius(15)
+                .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
             } else {
-                Text("No booked appointments")
-                    .font(.caption)
-                    .foregroundColor(.gray)
-                    .onAppear {
-                        print("DEBUG: No booked appointments to display")
-                    }
+                VStack(alignment: .leading) {
+                    Text("No booked appointments")
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                        .onAppear {
+                            print("DEBUG: No booked appointments to display")
+                        }
+                }
+                .padding()
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color(.systemGray6))
+                .cornerRadius(15)
             }
             
             // Next Available Slot section (instead of showing all available slots)
             if !availableAppointments.isEmpty {
-                Text("Next Available Slot")
-                    .font(.headline)
-                    .foregroundColor(.green)
-                    .padding(.top, 10)
-                    .onAppear {
-                        print("DEBUG: Rendering next available slot from \(availableAppointments.count) available appointments")
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Next Available Slot")
+                        .font(.headline)
+                        .foregroundColor(.green)
+                        .padding(.top, 5)
+                        .onAppear {
+                            print("DEBUG: Rendering next available slot from \(availableAppointments.count) available appointments")
+                        }
+                    
+                    // Only show the first available slot (assuming already sorted by time)
+                    let nextAvailable = availableAppointments.first!
+                    AppointmentRow(
+                        appointment: nextAvailable,
+                        isSelected: selectedAppointment?.id == nextAvailable.id
+                    )
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        print("DEBUG: Selected next available appointment: \(nextAvailable.id) at \(nextAvailable.time)")
+                        selectedAppointment = nextAvailable
+                        onAppointmentSelected?(nextAvailable)
                     }
-                
-                // Only show the first available slot (assuming already sorted by time)
-                let nextAvailable = availableAppointments.first!
-                AppointmentRow(
-                    appointment: nextAvailable,
-                    isSelected: selectedAppointment?.id == nextAvailable.id
-                )
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    print("DEBUG: Selected next available appointment: \(nextAvailable.id) at \(nextAvailable.time)")
-                    selectedAppointment = nextAvailable
-                    onAppointmentSelected?(nextAvailable)
+                    .onAppear {
+                        print("DEBUG: Displayed next available slot: \(nextAvailable.id) at time \(nextAvailable.time)")
+                    }
+                    
+                    Text("Tap to select this slot for a walk-in appointment")
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                        .padding(.bottom, 5)
                 }
-                .onAppear {
-                    print("DEBUG: Displayed next available slot: \(nextAvailable.id) at time \(nextAvailable.time)")
-                }
-                .padding(.bottom, 5)
-                
-                Text("Tap to select this slot for a walk-in appointment")
-                    .font(.caption)
-                    .foregroundColor(.gray)
-                    .padding(.bottom, 10)
+                .padding()
+                .background(Color(.systemGray6))
+                .cornerRadius(15)
+                .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
             } else {
-                Text("No available slots")
-                    .font(.caption)
-                    .foregroundColor(.gray)
-                    .onAppear {
-                        print("DEBUG: No available appointments to display")
-                    }
+                VStack(alignment: .leading) {
+                    Text("No available slots")
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                        .onAppear {
+                            print("DEBUG: No available appointments to display")
+                        }
+                }
+                .padding()
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color(.systemGray6))
+                .cornerRadius(15)
             }
         }
+        .padding(.horizontal)
         .onAppear {
             print("DEBUG: AppointmentListView appeared")
             print("DEBUG: Total appointments: \(appointments.count)")
