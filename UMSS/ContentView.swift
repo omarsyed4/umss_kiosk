@@ -44,6 +44,9 @@ struct ContentView: View {
     // Add appointment view model
     @StateObject private var appointmentVM = AppointmentViewModel()
 
+    // Add loading state for patient data
+    @State private var isLoadingPatientData = false
+
     // MARK: - Validation Helper Methods
     private func isBasicInfoValid() -> Bool {
         let email = viewModel.patientModel.email.trimmingCharacters(in: .whitespaces)
@@ -153,6 +156,16 @@ struct ContentView: View {
                                                 .padding()
                                             }
                                             
+                                            if isLoadingPatientData {
+                                                ProgressView("Loading patient information...")
+                                                    .padding()
+                                            } else if let office = appointmentVM.todaysOffice {
+                                                // Today is a clinic day at this office
+                                                VStack(alignment: .leading, spacing: 15) {
+                                                    // ...existing code...
+                                                }
+                                                .padding()
+                                            }
                                         }
                                     }
                                 }
@@ -166,7 +179,8 @@ struct ContentView: View {
                                         age: $viewModel.patientModel.age,
                                         phone: $viewModel.patientModel.phone,
                                         reasonForVisit: $viewModel.patientModel.reasonForVisit,
-                                        isExistingPatient: $viewModel.patientModel.isExistingPatient
+                                        isExistingPatient: $viewModel.patientModel.isExistingPatient,
+                                        initialDate: viewModel.patientModel.dateOfBirth
                                     )
                                 }
                                 // Step 2 – Demographics
@@ -522,19 +536,36 @@ struct ContentView: View {
     private func handleAppointmentSelection(_ appointment: Appointment) {
         // If the appointment is booked, try to load patient data
         if appointment.booked == true && !appointment.patientId.isEmpty {
-            // TODO: Load existing patient data
-            print("Loading patient with ID: \(appointment.patientId)")
+            isLoadingPatientData = true
             
-            // For now, just set the appointment ID in the view model
+            // Set the appointment ID in the view model
             viewModel.patientModel.appointmentId = appointment.id
             
+            // Fetch patient data from Firestore
+            viewModel.fetchPatientData(patientId: appointment.patientId) { success in
+                DispatchQueue.main.async {
+                    self.isLoadingPatientData = false
+                    
+                    if success {
+                        print("Successfully loaded patient data, navigating to basic info step")
+                        
+                        // Navigate to the basic info step
+                        withAnimation {
+                            moveDirection = .trailing
+                            currentStep = 1
+                        }
+                    } else {
+                        print("Failed to load patient data")
+                        // Handle error - maybe show an alert
+                    }
+                }
+            }
         } else {
             // For walk-ins, start a new patient form and assign this appointment
             viewModel.patientModel.appointmentId = appointment.id
             
             // Reset any existing patient data
             viewModel.resetPatientData()
-            
         }
     }
 }
@@ -593,7 +624,24 @@ struct BasicInfoStepView: View {
     @Binding var reasonForVisit: String
     @Binding var isExistingPatient: Bool
     
-    @State private var selectedDate: Date = Date()
+    // Use the patient's date of birth or default to today
+    @State private var selectedDate: Date
+    
+    // Initialize with a date parameter
+    init(email: Binding<String>, firstName: Binding<String>, lastName: Binding<String>, 
+         dob: Binding<String>, age: Binding<String>, phone: Binding<String>, 
+         reasonForVisit: Binding<String>, isExistingPatient: Binding<Bool>, 
+         initialDate: Date = Date()) {
+        self._email = email
+        self._firstName = firstName
+        self._lastName = lastName
+        self._dob = dob
+        self._age = age
+        self._phone = phone
+        self._reasonForVisit = reasonForVisit
+        self._isExistingPatient = isExistingPatient
+        self._selectedDate = State(initialValue: initialDate)
+    }
     
         
     var body: some View {
@@ -698,7 +746,7 @@ struct BasicInfoStepView: View {
                                     HStack(spacing: 10) {
                                         Button(
                                             action: {
-                                            if !email.contains("@") {
+                                            if (!email.contains("@")) {
                                                 email += "@gmail.com"
                                             }
                                         }) {
@@ -710,7 +758,7 @@ struct BasicInfoStepView: View {
                                         }
                                         
                                         Button(action: {
-                                            if !email.contains("@") {
+                                            if (!email.contains("@")) {
                                                 email += "@hotmail.com"
                                             }
                                         }) {
@@ -722,7 +770,7 @@ struct BasicInfoStepView: View {
                                         }
                                         
                                         Button(action: {
-                                            if !email.contains("@") {
+                                            if (!email.contains("@")) {
                                                 email += "@yahoo.com"
                                             }
                                         }) {
@@ -734,7 +782,7 @@ struct BasicInfoStepView: View {
                                         }
                                         
                                         Button(action: {
-                                            if !email.contains("@") {
+                                            if (!email.contains("@")) {
                                                 email += "@outlook.com"
                                             }
                                         }) {
@@ -746,7 +794,7 @@ struct BasicInfoStepView: View {
                                         }
                                         
                                         Button(action: {
-                                            if !email.contains("@") {
+                                            if (!email.contains("@")) {
                                                 email += "@icloud.com"
                                             }
                                         }) {

@@ -10,78 +10,70 @@ import Foundation
 import UIKit
 
 /// Model struct that holds the user's input data
-struct PatientModel {
-    // Existing fields
-    var email: String = ""
-    var firstName: String = ""
-    var lastName: String = ""
-    
-    // Computed property that combines first & last.
-    var fullName: String {
-        let combined = "\(firstName) \(lastName)".trimmingCharacters(in: .whitespaces)
-        return combined
-    }
-    
-    var dob: String = ""
-    var age: String = ""
-    var phone: String = ""
-    var rawAddress: String = ""
-    var address: String = ""
-    var city: String = ""
-    var state: String = ""
-    var zip: String = ""
-    var cityState: String = ""
-    var cityStateZip: String = ""
-    
-    var isExistingPatient: Bool = false
+class PatientModel: ObservableObject {
+    // Basic Information
+    @Published var email: String = ""
+    @Published var firstName: String = ""
+    @Published var lastName: String = ""
+    @Published var dob: String = ""  // String representation
+    @Published var dateOfBirth: Date = Date()  // Date object for the datepicker
+    @Published var age: String = ""
+    @Published var phone: String = ""
+    @Published var rawAddress: String = ""
+    @Published var address: String = ""
+    @Published var city: String = ""
+    @Published var state: String = ""
+    @Published var zip: String = ""
+    @Published var cityState: String = ""
+    @Published var cityStateZip: String = ""
+    @Published var reasonForVisit: String = ""
+    @Published var isExistingPatient: Bool = false
 
     // Gender properties
-    var selectedGender: String = ""
-    var isMale: Bool = false
-    var isFemale: Bool = false
+    @Published var selectedGender: String = ""
+    @Published var isMale: Bool = false
+    @Published var isFemale: Bool = false
     
-    var selectedIncome: String = ""
-    var selectedFamilySize = ""
-    var selectedIncomeThreshold = ""
+    @Published var selectedIncome: String = ""
+    @Published var selectedFamilySize = ""
+    @Published var selectedIncomeThreshold = ""
     
     // Marital status checkboxes
-    var isSingle: Bool = false
-    var isMarried: Bool = false
-    var isDivorced: Bool = false
-    var isWidowed: Bool = false
+    @Published var isSingle: Bool = false
+    @Published var isMarried: Bool = false
+    @Published var isDivorced: Bool = false
+    @Published var isWidowed: Bool = false
 
     // Race checkboxes
-    var isWhite: Bool = false
-    var isBlack: Bool = false
-    var isAsian: Bool = false
-    var isAmIndian: Bool = false
+    @Published var isWhite: Bool = false
+    @Published var isBlack: Bool = false
+    @Published var isAsian: Bool = false
+    @Published var isAmIndian: Bool = false
     
-    var selectedRace: String = ""
-    var selectedMaritalStatus: String = ""
-    var selectedEthnicity: String = ""
+    @Published var selectedRace: String = ""
+    @Published var selectedMaritalStatus: String = ""
+    @Published var selectedEthnicity: String = ""
 
     // Ethnicity checkboxes
-    var isHispanic: Bool = false
-    var isNonHispanic: Bool = false
+    @Published var isHispanic: Bool = false
+    @Published var isNonHispanic: Bool = false
     
     // Insurance checkbox (default to "False")
-    var insuredNo: Bool = false
-    
-    var reasonForVisit: String = ""
+    @Published var insuredNo: Bool = false
     
     // Additional fields
-    var date: String = {
+    @Published var date: String = {
         let formatter = DateFormatter()
         formatter.dateFormat = "MM/dd/yyyy"  // Change format if needed
         return formatter.string(from: Date())
     }()
-    var signatureImage: UIImage? = nil
+    @Published var signatureImage: UIImage? = nil
 
     // Office selection
-    var selectedOfficeId: String?
-    var selectedOfficeName: String = ""
-    var selectedOfficeAddress: String = ""
-    var selectedOfficePhone: String = ""
+    @Published var selectedOfficeId: String?
+    @Published var selectedOfficeName: String = ""
+    @Published var selectedOfficeAddress: String = ""
+    @Published var selectedOfficePhone: String = ""
 
     // MARK: - Computed Properties for Readable Strings
 
@@ -98,6 +90,11 @@ struct PatientModel {
         if isAsian { races.append("Asian") }
         if isAmIndian { races.append("American Indian") }
         return races.joined(separator: ", ")
+    }
+
+    /// Returns the full name as a string.
+    var fullName: String {
+        return "\(firstName) \(lastName)"
     }
 
     /// Returns the ethnicity as a string.
