@@ -135,11 +135,7 @@ struct ContentView: View {
                                                     .padding()
                                             } else if let office = appointmentVM.todaysOffice {
                                                 // Today is a clinic day at this office
-                                                VStack(alignment: .leading, spacing: 15) {
-                                                    Text("Today's Clinic")
-                                                        .font(.title2)
-                                                        .fontWeight(.semibold)
-                                                                                                        
+                                                VStack(alignment: .leading, spacing: 15) {                                                                                                        
                                                     
                                                     if appointmentVM.appointments.isEmpty {
                                                         Text("No appointments available")

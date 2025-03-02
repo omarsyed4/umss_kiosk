@@ -203,9 +203,9 @@ struct AppointmentRow: View {
         }
         .padding()
         .background(Color.white)
-        .cornerRadius(8)
+        .cornerRadius(20)
         .overlay(
-            RoundedRectangle(cornerRadius: 8)
+            RoundedRectangle(cornerRadius: 20)
                 .stroke(isSelected ? Color.blue : Color(.systemGray4), lineWidth: isSelected ? 2 : 1)
         )
         .animation(.easeInOut(duration: 0.2), value: isSelected)
