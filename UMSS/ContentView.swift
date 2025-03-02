@@ -233,64 +233,66 @@ struct ContentView: View {
                 } // End Group
                 // Attach sticky navigation buttons using safeAreaInset on the Group
                 .safeAreaInset(edge: .bottom, spacing: 0) {
-                    HStack {
-                        if currentStep > 0 {
-                            Button(action: {
-                                withAnimation {
-                                    moveDirection = .leading
-                                    currentStep -= 1
-                                }
-                            }) {
-                                Text("Back")
-                                    .font(.headline)
-                                    .foregroundColor(.white)
-                                    .padding(.vertical, 10)
-                                    .padding(.horizontal, 20)
-                                    .background(UMSSBrand.navy)
-                                    .cornerRadius(8)
-                            }
-                        }
-                        Spacer()
-                        if currentStep < totalSteps - 1 {
-                            Button(action: {
-                                withAnimation {
-                                    moveDirection = .trailing
-                                    currentStep += 1
-                                }
-                            }) {
-                                Text("Next")
-                                    .font(.headline)
-                                    .foregroundColor(.white)
-                                    .padding(.vertical, 10)
-                                    .padding(.horizontal, 20)
-                                    .background(isCurrentStepValid ? UMSSBrand.gold : Color.gray)
-                                    .cornerRadius(8)
-                            }
-                            .disabled(!isCurrentStepValid)
-                        } else {
-                            Button(action: previewPDFAction) {
-                                if isGeneratingPDF {
-                                    ProgressView()
-                                } else {
-                                    Text("Preview PDF")
+                    if currentStep > 0 { // Only show navigation when not on the start page
+                        HStack {
+                            if currentStep > 0 {
+                                Button(action: {
+                                    withAnimation {
+                                        moveDirection = .leading
+                                        currentStep -= 1
+                                    }
+                                }) {
+                                    Text("Back")
                                         .font(.headline)
                                         .foregroundColor(.white)
                                         .padding(.vertical, 10)
                                         .padding(.horizontal, 20)
+                                        .background(UMSSBrand.navy)
+                                        .cornerRadius(8)
                                 }
                             }
-                            .background(UMSSBrand.gold)
-                            .cornerRadius(8)
-                            
-                            Text(uploadStatus)
-                                .foregroundColor(.blue)
-                                .padding()
+                            Spacer()
+                            if currentStep < totalSteps - 1 {
+                                Button(action: {
+                                    withAnimation {
+                                        moveDirection = .trailing
+                                        currentStep += 1
+                                    }
+                                }) {
+                                    Text("Next")
+                                        .font(.headline)
+                                        .foregroundColor(.white)
+                                        .padding(.vertical, 10)
+                                        .padding(.horizontal, 20)
+                                        .background(isCurrentStepValid ? UMSSBrand.gold : Color.gray)
+                                        .cornerRadius(8)
+                                }
+                                .disabled(!isCurrentStepValid)
+                            } else {
+                                Button(action: previewPDFAction) {
+                                    if isGeneratingPDF {
+                                        ProgressView()
+                                    } else {
+                                        Text("Preview PDF")
+                                            .font(.headline)
+                                            .foregroundColor(.white)
+                                            .padding(.vertical, 10)
+                                            .padding(.horizontal, 20)
+                                    }
+                                }
+                                .background(UMSSBrand.gold)
+                                .cornerRadius(8)
+                                
+                                Text(uploadStatus)
+                                    .foregroundColor(.blue)
+                                    .padding()
+                            }
                         }
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 10)
+                        .background(Color.white)
+                        .shadow(color: Color.black.opacity(0.2), radius: 5, x: 0, y: -2)
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 10)
-                    .background(Color.white)
-                    .shadow(color: Color.black.opacity(0.2), radius: 5, x: 0, y: -2)
                 }
             }
             .navigationBarHidden(true)
