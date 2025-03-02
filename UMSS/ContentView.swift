@@ -532,18 +532,13 @@ struct ContentView: View {
     // Add this function in the ContentView struct
     private func handleAppointmentSelection(_ appointment: Appointment) {
         // If the appointment is booked, try to load patient data
-        if appointment.booked == "true" && !appointment.patientId.isEmpty {
+        if appointment.booked == true && !appointment.patientId.isEmpty {
             // TODO: Load existing patient data
             print("Loading patient with ID: \(appointment.patientId)")
             
             // For now, just set the appointment ID in the view model
             viewModel.patientModel.appointmentId = appointment.id
             
-            // Navigate to the patient form
-            withAnimation {
-                moveDirection = .trailing
-                currentStep = 1  // Navigate to Basic Info step
-            }
         } else {
             // For walk-ins, start a new patient form and assign this appointment
             viewModel.patientModel.appointmentId = appointment.id
@@ -551,11 +546,6 @@ struct ContentView: View {
             // Reset any existing patient data
             viewModel.resetPatientData()
             
-            // Navigate to the patient form
-            withAnimation {
-                moveDirection = .trailing
-                currentStep = 1  // Navigate to Basic Info step
-            }
         }
     }
 }
