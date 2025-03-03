@@ -17,15 +17,19 @@ struct BasicInfoStepView: View {
     @Binding var phone: String
     @Binding var reasonForVisit: String
     @Binding var isExistingPatient: Bool
-    
-    // Use the patient's date of birth or default to today
+
+    // Flag to determine mode: walk-in uses DatePicker; appointment uses TextField.
+    let isWalkIn: Bool
+
+    // Use the patient's date of birth or default to today.
     @State private var selectedDate: Date
-    
-    // Initialize with a date parameter
+
+    // Initialize with a date parameter and isWalkIn flag.
     init(email: Binding<String>, firstName: Binding<String>, lastName: Binding<String>, 
          dob: Binding<String>, age: Binding<String>, phone: Binding<String>, 
          reasonForVisit: Binding<String>, isExistingPatient: Binding<Bool>, 
-         initialDate: Date = Date()) {
+         initialDate: Date = Date(),
+         isWalkIn: Bool = true) {
         self._email = email
         self._firstName = firstName
         self._lastName = lastName
@@ -35,9 +39,9 @@ struct BasicInfoStepView: View {
         self._reasonForVisit = reasonForVisit
         self._isExistingPatient = isExistingPatient
         self._selectedDate = State(initialValue: initialDate)
+        self.isWalkIn = isWalkIn
     }
-    
-        
+
     var body: some View {
         ScrollView {
             VStack(spacing: 30) {
@@ -56,47 +60,7 @@ struct BasicInfoStepView: View {
                 SectionCard(title: "Basic Information") {
                     // A single HStack containing First/Last Name and DOB side by side
                     HStack(spacing: 20) {
-
-                            TextField("First Name", text: $firstName)
-                                .padding(12)
-                                .background(Color.white)
-                                .cornerRadius(8)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .stroke(Color.gray.opacity(0.5), lineWidth: 1)
-                                )
-
-                            TextField("Last Name", text: $lastName)
-                                .padding(12)
-                                .background(Color.white)
-                                .cornerRadius(8)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .stroke(Color.gray.opacity(0.5), lineWidth: 1)
-                                )
-                        
-
-                        // DOB Field
-                        VStack(spacing: 10) {
-                            HStack(spacing: 10) {
-                                Text("DOB")
-                                    .font(.headline)
-                                    .foregroundColor(.secondary)
-                                DatePicker("", selection: $selectedDate, displayedComponents: .date)
-                                    .datePickerStyle(CompactDatePickerStyle())
-                                    .labelsHidden()
-                                    .onChange(of: selectedDate) { newValue in
-                                        // Update dob as formatted string
-                                        let formatter = DateFormatter()
-                                        formatter.dateFormat = "MM/dd/yyyy"
-                                        dob = formatter.string(from: newValue)
-                                        
-                                        // Calculate age from the selected date
-                                        let now = Date()
-                                        let ageComponents = Calendar.current.dateComponents([.year], from: newValue, to: now)
-                                        age = "\(ageComponents.year ?? 0)"
-                                    }
-                            }
+                        TextField("First Name", text: $firstName)
                             .padding(12)
                             .background(Color.white)
                             .cornerRadius(8)
@@ -105,6 +69,56 @@ struct BasicInfoStepView: View {
                                     .stroke(Color.gray.opacity(0.5), lineWidth: 1)
                             )
 
+                        TextField("Last Name", text: $lastName)
+                            .padding(12)
+                            .background(Color.white)
+                            .cornerRadius(8)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color.gray.opacity(0.5), lineWidth: 1)
+                            )
+                        
+                        // DOB Field
+                        VStack(spacing: 10) {
+                            HStack(spacing: 10) {
+                                Text("DOB")
+                                    .font(.headline)
+                                    .foregroundColor(.secondary)
+                                if isWalkIn {
+                                    DatePicker(
+                                        "",
+                                        selection: $selectedDate,
+                                        displayedComponents: .date
+                                    )
+                                    .datePickerStyle(CompactDatePickerStyle())
+                                    .labelsHidden()
+                                    .onChange(of: selectedDate) { newValue in
+                                        let formatter = DateFormatter()
+                                        formatter.dateFormat = "MM/dd/yyyy"
+                                        dob = formatter.string(from: newValue)
+                                        
+                                        let now = Date()
+                                        let ageComponents = Calendar.current.dateComponents([.year], from: newValue, to: now)
+                                        age = "\(ageComponents.year ?? 0)"
+                                    }
+                                } else {
+                                    TextField("MM/DD/YYYY", text: $dob)
+                                        .padding(12)
+                                        .background(Color.white)
+                                        .cornerRadius(8)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 8)
+                                                .stroke(Color.gray.opacity(0.5), lineWidth: 1)
+                                        )
+                                }
+                            }
+                            .padding(12)
+                            .background(Color.white)
+                            .cornerRadius(8)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color.gray.opacity(0.5), lineWidth: 1)
+                            )
                         }
                         .frame(maxWidth: .infinity)
                     }

@@ -89,16 +89,6 @@ extension PatientModelViewModel {
                 self.patientModel.lastName = data["lastName"] as? String ?? ""
                 self.patientModel.email = data["email"] as? String ?? ""
                 self.patientModel.dob = data["dob"] as? String ?? ""
-                
-                // Convert DOB string to Date if available
-                if let dobString = data["dob"] as? String, !dobString.isEmpty {
-                    let dateFormatter = DateFormatter()
-                    dateFormatter.dateFormat = "MM/dd/yyyy"
-                    if let dobDate = dateFormatter.date(from: dobString) {
-                        self.patientModel.dateOfBirth = dobDate
-                    }
-                }
-                
                 self.patientModel.age = data["age"] as? String ?? ""
                 self.patientModel.phone = data["phone"] as? String ?? ""
                 self.patientModel.reasonForVisit = data["reason"] as? String ?? ""
