@@ -18,7 +18,8 @@ struct ContentView: View {
         case basicInfo = "Basic Info"
         case demographics = "Demographics"
         case signature = "Signature"
-        case thankYou = "Thank You"
+        case uploadDoc = "Check-In Doc Upload"
+        case vitals = "Vitals"           // NEW, now comes after document upload
         
         var id: Self { self }
     }
@@ -47,6 +48,10 @@ struct ContentView: View {
 
     // Folder ID for Drive uploads.
     let folderID = "16b3ZeFMpHft5yN8zGguhABeNjgrTa6Mu"
+    
+    // NEW vitals completion state
+    @State private var isVitalsComplete: Bool = false
+    @State private var isUploadDocComplete: Bool = false  // NEW uploadDoc completion state
     
     // MARK: - Computed Validation Properties
     private var isBasicInfoComplete: Bool {
@@ -99,7 +104,10 @@ struct ContentView: View {
             if isDemographicsComplete {
                 steps.append(.signature)
                 if isSignatureComplete {
-                    steps.append(.thankYou)
+                    steps.append(.uploadDoc)
+                    if isUploadDocComplete {
+                        steps.append(.vitals)
+                    }
                 }
             }
         }
@@ -127,6 +135,7 @@ struct ContentView: View {
                     // Sidebar with icons, step checks, and a Cancel button.
                     VStack(alignment: .leading) {
                         List(PatientFlowStep.allCases, id: \.self) { step in
+                            let isEnabled = (allowedSteps.contains(step) || step == .basicInfo)
                             HStack {
                                 // Icon for each step.
                                 Group {
@@ -134,11 +143,13 @@ struct ContentView: View {
                                     case .basicInfo:
                                         Image(systemName: "person.fill")
                                     case .demographics:
-                                        Image(systemName: "info.circle.fill")
+                                        Image(systemName: "info.bubble")
                                     case .signature:
-                                        Image(systemName: "pencil.circle.fill")
-                                    case .thankYou:
-                                        Image(systemName: "checkmark.seal.fill")
+                                        Image(systemName: "signature")
+                                    case .uploadDoc:
+                                        Image(systemName: "ecg.text.page")
+                                    case .vitals:
+                                        Image(systemName: "heart.text.clipboard")
                                     }
                                 }
                                 .frame(width: 24)
@@ -149,8 +160,9 @@ struct ContentView: View {
                                 // Show a checkmark if the step is complete.
                                 if (step == .basicInfo && isBasicInfoComplete) ||
                                    (step == .demographics && isDemographicsComplete) ||
+                                   (step == .vitals && isVitalsComplete) ||
                                    (step == .signature && isSignatureComplete) {
-                                    Image(systemName: "checkmark")
+                                    Image(systemName: "checkmark.rectangle.fill")
                                         .foregroundColor(.green)
                                 }
                             }
@@ -160,12 +172,15 @@ struct ContentView: View {
                                 let allSteps = PatientFlowStep.allCases
                                 if let tappedIndex = allSteps.firstIndex(of: step),
                                    let currentIndex = allSteps.firstIndex(of: selectedFlowStep),
-                                   tappedIndex <= currentIndex || allowedSteps.contains(step) {
+                                   tappedIndex <= currentIndex || isEnabled {
                                     selectedFlowStep = step
                                 }
                             }
-                            .disabled(!(allowedSteps.contains(step) || step == .basicInfo))
+                            .disabled(!isEnabled)
+                            .foregroundColor(isEnabled ? .primary : .gray)
                         }
+
+
                         Spacer()
                         // Cancel button to reset patient data and return to dashboard.
                         Button(action: {
@@ -173,26 +188,21 @@ struct ContentView: View {
                             inPatientFlow = false
                         }) {
                             HStack {
-                                Image(systemName: "xmark.circle.fill")
+                                Image(systemName: "xmark.bin")
                                 Text("Cancel")
                             }
                             .foregroundColor(.red)
                             .padding()
                         }
+                        .frame(maxWidth: .infinity, alignment: .center)
                     }
                     .frame(minWidth: 250)
                     .listStyle(SidebarListStyle())
-                    .navigationTitle("Patient Flow")
+                    .navigationTitle("Processing: \(viewModel.patientModel.fullName)")
+                    .navigationBarTitleDisplayMode(.inline)
                     
                     // Main content area.
                     content(for: selectedFlowStep)
-//                        .toolbar {
-//                            ToolbarItem(placement: .navigationBarLeading) {
-//                                Button("Dashboard") {
-//                                    inPatientFlow = false
-//                                }
-//                            }
-//                        }
                 }
                 .navigationViewStyle(DoubleColumnNavigationViewStyle())
             }
@@ -277,23 +287,29 @@ struct ContentView: View {
                     cityStateZip: $viewModel.patientModel.cityStateZip,
                     isPickerPresented: $isAddressPickerPresented
                 )
-                nextButton(currentStep: .demographics, nextStep: .signature, isComplete: isDemographicsComplete)
+                nextButton(currentStep: .demographics, nextStep: .vitals, isComplete: isDemographicsComplete)
             }
         case .signature:
             VStack {
                 SignatureStep(signatureImage: $viewModel.patientModel.signatureImage)
                     .padding(.horizontal, 20)
-                nextButton(currentStep: .signature, nextStep: .thankYou, isComplete: isSignatureComplete)
+                nextButton(currentStep: .signature, nextStep: .uploadDoc, isComplete: isSignatureComplete)
             }
-        case .thankYou:
-            // Thank You view offers a Preview PDF button and a Return to Dashboard option.
-            ThankYouView(
+        case .uploadDoc:
+            // UPDATED: Instead of finishing the flow, mark upload doc as complete and navigate to vitals.
+            CheckInDocumentView(
                 onFinish: {
-                    viewModel.resetPatientData()
-                    inPatientFlow = false
+                    isUploadDocComplete = true
+                    selectedFlowStep = .vitals
                 },
                 onPreviewPDF: { previewPDFAction() }
             )
+        case .vitals:
+            VitalsStepView(onComplete: {
+                // After vitals, finish the flow (customize as needed)
+                viewModel.resetPatientData()
+                inPatientFlow = false
+            }, patientModel: viewModel.patientModel)
         }
     }
     
@@ -403,7 +419,7 @@ struct ContentView: View {
 }
 
 //
-// MARK: - Dashboard and Thank You Views
+// MARK: - Dashboard and Document Upload Views
 //
 
 struct DashboardView: View {
@@ -450,35 +466,65 @@ struct DashboardView: View {
     }
 }
 
-struct ThankYouView: View {
+struct CheckInDocumentView: View {
     // Callbacks for finishing the flow or previewing the PDF.
     let onFinish: () -> Void
     let onPreviewPDF: () -> Void
-    
+
+    // Add state to track if PDF has been previewed.
+    @State private var hasPreviewedPDF = false
+
     var body: some View {
-        VStack(spacing: 30) {
+        VStack(spacing: 20) {
             HeaderView()
-            Text("Thank You!")
-                .font(.largeTitle)
-                .fontWeight(.bold)
+                .padding(.bottom, 20)
+
+            Text("Document Preview")
+                .font(.system(size: 28, weight: .bold))
                 .foregroundColor(UMSSBrand.navy)
-            Text("Thanks for filling this out. You may hand this back to a volunteer.")
-                .font(.headline)
+
+            Text("Review your completed document before proceeding.")
+                .font(.system(size: 16))
+                .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
-                .foregroundColor(.primary)
-            Button("Preview PDF", action: onPreviewPDF)
+                .padding(.horizontal)
+
+            Spacer()
+
+            // Preview PDF Button
+            Button(action: {
+                onPreviewPDF()
+                hasPreviewedPDF = true
+            }) {
+                HStack {
+                    Image(systemName: "doc.text.viewfinder")
+                    Text("Preview PDF")
+                }
                 .font(.headline)
                 .padding()
+                .frame(maxWidth: .infinity)
                 .background(UMSSBrand.navy)
                 .foregroundColor(.white)
-                .cornerRadius(8)
-            Button("Return to Dashboard", action: onFinish)
-                .font(.headline)
-                .padding()
-                .background(UMSSBrand.gold)
-                .foregroundColor(.white)
-                .cornerRadius(8)
+                .cornerRadius(10)
+            }
+            .padding(.horizontal)
+
+            // New "Next" button, disabled until PDF is previewed
+            Button(action: onFinish) {
+                Text("Next")
+                    .font(.headline)
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(hasPreviewedPDF ? UMSSBrand.gold : Color.gray)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
+            }
+            .padding(.horizontal)
+            .disabled(!hasPreviewedPDF)
+
+            Spacer()
         }
         .padding()
+        .background(Color(UIColor.systemGroupedBackground).edgesIgnoringSafeArea(.all))
     }
 }
