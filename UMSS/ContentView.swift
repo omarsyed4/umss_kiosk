@@ -43,21 +43,39 @@ struct ContentView: View {
     // Additional states.
     @State private var isAddressPickerPresented = false
     @State private var isLoadingPatientData = false
-    
+    @State private var isWalkIn: Bool = true
+
     // Folder ID for Drive uploads.
     let folderID = "16b3ZeFMpHft5yN8zGguhABeNjgrTa6Mu"
     
     // MARK: - Computed Validation Properties
     private var isBasicInfoComplete: Bool {
         let model = viewModel.patientModel
-        return !model.email.trimmingCharacters(in: .whitespaces).isEmpty &&
-               !model.firstName.trimmingCharacters(in: .whitespaces).isEmpty &&
-               !model.lastName.trimmingCharacters(in: .whitespaces).isEmpty &&
-               !model.dob.trimmingCharacters(in: .whitespaces).isEmpty &&
-               !model.age.trimmingCharacters(in: .whitespaces).isEmpty &&
-               !model.phone.trimmingCharacters(in: .whitespaces).isEmpty &&
-               !model.reasonForVisit.trimmingCharacters(in: .whitespaces).isEmpty
+        let emailValid     = !model.email.trimmingCharacters(in: .whitespaces).isEmpty
+        let firstNameValid = !model.firstName.trimmingCharacters(in: .whitespaces).isEmpty
+        let lastNameValid  = !model.lastName.trimmingCharacters(in: .whitespaces).isEmpty
+        let phoneValid     = !model.phone.trimmingCharacters(in: .whitespaces).isEmpty
+        let reasonValid    = !model.reasonForVisit.trimmingCharacters(in: .whitespaces).isEmpty
+        let dobValid       = !model.dob.trimmingCharacters(in: .whitespaces).isEmpty
+        // For appointments (isWalkIn == false), age check is skipped
+        let ageValid       = isWalkIn ? !model.age.trimmingCharacters(in: .whitespaces).isEmpty : true
+
+        let complete = (emailValid && firstNameValid && lastNameValid && phoneValid && reasonValid && dobValid && ageValid)
+        if !complete {
+            var missingFields = [String]()
+            if !emailValid { missingFields.append("email") }
+            if !firstNameValid { missingFields.append("firstName") }
+            if !lastNameValid { missingFields.append("lastName") }
+            if !dobValid { missingFields.append("dob") }
+            if isWalkIn && !ageValid { missingFields.append("age") }
+            if !phoneValid { missingFields.append("phone") }
+            if !reasonValid { missingFields.append("reasonForVisit") }
+            print("BasicInfo incomplete – missing: \(missingFields)")
+        }
+        return complete
     }
+
+    
     
     private var isDemographicsComplete: Bool {
         let model = viewModel.patientModel
@@ -224,7 +242,8 @@ struct ContentView: View {
                     phone: $viewModel.patientModel.phone,
                     reasonForVisit: $viewModel.patientModel.reasonForVisit,
                     isExistingPatient: $viewModel.patientModel.isExistingPatient,
-                    initialDate: viewModel.patientModel.dateOfBirth
+                    initialDate: viewModel.patientModel.dateOfBirth,
+                    isWalkIn: isWalkIn
                 )
                 nextButton(currentStep: .basicInfo, nextStep: .demographics, isComplete: isBasicInfoComplete)
             }
@@ -300,6 +319,7 @@ struct ContentView: View {
         if appointment.booked == true && !appointment.patientId.isEmpty {
             isLoadingPatientData = true
             viewModel.patientModel.appointmentId = appointment.id
+            isWalkIn = false  // set for booked appointments
             viewModel.fetchPatientData(patientId: appointment.patientId) { success in
                 DispatchQueue.main.async {
                     self.isLoadingPatientData = false
@@ -317,6 +337,7 @@ struct ContentView: View {
             // For walk-ins or new appointments, reset and start at basic info.
             viewModel.patientModel.appointmentId = appointment.id
             viewModel.resetPatientData()
+            isWalkIn = true  // set for walk-in appointments
             inPatientFlow = true
             selectedFlowStep = .basicInfo
         }
