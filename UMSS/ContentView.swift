@@ -444,15 +444,6 @@ struct DashboardView: View {
                     .padding()
                 }
                 
-                // Walk-In button to start a new patient flow.
-                Button(action: handleWalkIn) {
-                    Text("Walk-In")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .padding()
-                        .background(UMSSBrand.gold)
-                        .cornerRadius(8)
-                }
             }
             .padding()
         }
