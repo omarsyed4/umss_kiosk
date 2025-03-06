@@ -154,24 +154,24 @@ struct VitalsStepView: View {
                         Text("Recent Illness?")
                             .font(.headline)
                         ChoiceRow(
-                            title: "A Fever",
-                            isSelected: recentIllnessSelection == "A Fever",
-                            action: { recentIllnessSelection = "A Fever" }
+                            title: "Fever",
+                            isSelected: recentIllnessSelection == "Fever",
+                            action: { recentIllnessSelection = "Fever" }
                         )
                         ChoiceRow(
-                            title: "B Cough",
-                            isSelected: recentIllnessSelection == "B Cough",
-                            action: { recentIllnessSelection = "B Cough" }
+                            title: "Cough",
+                            isSelected: recentIllnessSelection == "Cough",
+                            action: { recentIllnessSelection = "Cough" }
                         )
                         ChoiceRow(
-                            title: "C Congestion",
-                            isSelected: recentIllnessSelection == "C Congestion",
-                            action: { recentIllnessSelection = "C Congestion" }
+                            title: "Congestion",
+                            isSelected: recentIllnessSelection == "Congestion",
+                            action: { recentIllnessSelection = "Congestion" }
                         )
                         ChoiceRow(
-                            title: "D None",
-                            isSelected: recentIllnessSelection == "D None",
-                            action: { recentIllnessSelection = "D None" }
+                            title: "None",
+                            isSelected: recentIllnessSelection == "None",
+                            action: { recentIllnessSelection = "None" }
                         )
                     }
                 } else if currentSlide == 3 {
