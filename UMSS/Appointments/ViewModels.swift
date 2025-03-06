@@ -93,11 +93,11 @@ class AppointmentViewModel: ObservableObject {
         isLoading = true
         errorMessage = nil
         
-        // Format yesterday's date as m-d-yy
+        // Format today's date as m-d-yy for Firestore document lookup
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "M-d-yy"
-        let yesterday = Calendar.current.date(byAdding: .day, value: +3, to: Date())!
-        let todayString = dateFormatter.string(from: yesterday)
+        let today = Date()
+        let todayString = dateFormatter.string(from: today)
         
         print("Checking if today (\(todayString)) is a clinic day...")
         
@@ -177,8 +177,26 @@ class AppointmentViewModel: ObservableObject {
     }
     
     private func fetchAppointments(officeId: String, office: Office) {
-        // Remove or replace the old ".whereField("date", isEqualTo: todayDate)" code:
+        // Get start and end timestamps for today
+        let calendar = Calendar.current
+        let today = Date()
+        
+        let startOfDay = calendar.startOfDay(for: today)
+        guard let endOfDay = calendar.date(bySettingHour: 23, minute: 59, second: 59, of: today) else {
+            self.errorMessage = "Error creating date range"
+            self.isLoading = false
+            return
+        }
+        
+        let startTimestamp = Timestamp(date: startOfDay)
+        let endTimestamp = Timestamp(date: endOfDay)
+        
+        print("Fetching appointments between \(startOfDay) and \(endOfDay)")
+        
+        // Query appointments for today only using Firestore query
         db.collection("offices").document(officeId).collection("appointments")
+            .whereField("dateTime", isGreaterThanOrEqualTo: startTimestamp)
+            .whereField("dateTime", isLessThanOrEqualTo: endTimestamp)
             .getDocuments { [weak self] (snapshot, error) in
                 guard let self = self else { return }
     
@@ -195,7 +213,9 @@ class AppointmentViewModel: ObservableObject {
                         return
                     }
                     
-                    // Check each document's dateTime field
+                    print("Found \(snapshot.documents.count) appointments for today")
+                    
+                    // Parse appointment documents
                     self.appointments = snapshot.documents.compactMap { doc -> Appointment? in
                         let data = doc.data()
                         
@@ -207,13 +227,6 @@ class AppointmentViewModel: ObservableObject {
                         
                         let appointmentDate = dateTime.dateValue()
                         
-                        // Only include appointments for today's date + 3 days
-                        let futureDate = Calendar.current.date(byAdding: .day, value: 3, to: Date())!
-                        guard Calendar.current.isDate(appointmentDate, inSameDayAs: futureDate) else {
-                            return nil
-                        }
-
-                        
                         // Format date to "yyyy-MM-dd"
                         let dateFormatter = DateFormatter()
                         dateFormatter.dateFormat = "yyyy-MM-dd"
@@ -223,7 +236,6 @@ class AppointmentViewModel: ObservableObject {
                         let timeFormatter = DateFormatter()
                         timeFormatter.dateFormat = "h:mm a"
                         let parsedTime = timeFormatter.string(from: appointmentDate)
-
                         
                         // Build the new Appointment
                         return Appointment(
@@ -239,7 +251,7 @@ class AppointmentViewModel: ObservableObject {
                         )
                     }
                     
-                    // Sort and assign
+                    // Sort appointments by time
                     self.appointments.sort { $0.time < $1.time }
                     self.todaysOffice = office
                 }
