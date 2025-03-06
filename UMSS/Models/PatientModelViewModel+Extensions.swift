@@ -125,6 +125,7 @@ extension PatientModelViewModel {
                 self.patientModel.city = data["city"] as? String ?? ""
                 self.patientModel.state = data["state"] as? String ?? ""
                 self.patientModel.zip = data["zip"] as? String ?? ""
+                self.patientModel.cityState = data["cityState"] as? String ?? ""
                 self.patientModel.cityStateZip = data["cityStateZip"] as? String ?? ""
                 
                 print("Successfully loaded patient data for ID: \(patientId)")
