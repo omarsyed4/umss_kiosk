@@ -19,7 +19,7 @@ struct ContentView: View {
         case demographics = "Demographics"
         case signature = "Signature"
         case uploadDoc = "Check-In Doc Upload"
-        case vitals = "Vitals"           // NEW, now comes after document upload
+        case vitals = "Vitals"
         
         var id: Self { self }
     }
