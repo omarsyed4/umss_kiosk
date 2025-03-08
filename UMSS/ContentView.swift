@@ -287,7 +287,7 @@ struct ContentView: View {
                     cityStateZip: $viewModel.patientModel.cityStateZip,
                     isPickerPresented: $isAddressPickerPresented
                 )
-                nextButton(currentStep: .demographics, nextStep: .vitals, isComplete: isDemographicsComplete)
+                nextButton(currentStep: .demographics, nextStep: .signature, isComplete: isDemographicsComplete)
             }
         case .signature:
             VStack {
