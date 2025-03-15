@@ -2,9 +2,9 @@ import SwiftUI
 
 struct VitalsStepView: View {
     let onComplete: () -> Void
-
     @ObservedObject var patientModel: PatientModel
-    // Current slide index (0...4)
+    
+    // Current slide index (0...6)
     @State private var currentSlide: Int = 0
 
     // Slide 1: Height and Weight pickers
@@ -13,7 +13,7 @@ struct VitalsStepView: View {
     let heights = Array(100...250)
     let weights = Array(30...150)
 
-    // Add new state properties for the sliding number bars
+    // Slide 1: Additional Sliders
     @State private var temperature: Double = 98.6
     @State private var respiratoryRate: Double = 12
     @State private var bloodPressure: Double = 120
@@ -25,7 +25,6 @@ struct VitalsStepView: View {
     @State private var chiefComplaint: String = ""
 
     // Slide 3: Pain indicator + Recent Travel/Illness
-
     @State private var painLevel: Double = 5
     @State private var recentTravel: Bool = false
     @State private var recentIllnessSelection: String = ""
@@ -37,207 +36,57 @@ struct VitalsStepView: View {
     // Slide 5: Recent Hospitalizations
     @State private var hospitalizations: String = ""
     @State private var noHospitalizations: Bool = false
+    
+    // Slide 6: Medications
+    @State private var medications: [Medication] = [Medication()]
+
+    // Slide 7: Medical / Family History
+    @State private var selfMedicalHistory: [String] = []
+    @State private var familyMedicalHistory: [String] = []
+
+    // Medication data structure
+    struct Medication: Identifiable {
+        var id = UUID()
+        var name: String = ""
+        var dosage: String = ""
+        var frequency: String = ""
+        var startDate: Date = Date()
+    }
 
     var body: some View {
         VStack {
             Spacer()
 
-            // Display the current slide based on the currentSlide index
             Group {
                 if currentSlide == 0 {
-                    // Slide 1: Height and Weight
-                    VStack(spacing: 20) {
-                        Text("Select Your Height and Weight")
-                            .font(.title2)
-                            .fontWeight(.semibold)
-                        
-                        HStack(spacing: 40) {
-                            VStack {
-                                Text("Height (cm)")
-                                    .font(.subheadline)
-                                Picker("Height", selection: $selectedHeight) {
-                                    ForEach(heights, id: \.self) { height in
-                                        Text("\(height)")
-                                    }
-                                }
-                                .pickerStyle(WheelPickerStyle())
-                                .frame(maxWidth: 100)
-                            }
-                            
-                            VStack {
-                                Text("Weight (kg)")
-                                    .font(.subheadline)
-                                Picker("Weight", selection: $selectedWeight) {
-                                    ForEach(weights, id: \.self) { weight in
-                                        Text("\(weight)")
-                                    }
-                                }
-                                .pickerStyle(WheelPickerStyle())
-                                .frame(maxWidth: 100)
-                            }
-                        }
-                        
-                        // Sliders in a 2x3 grid:
-                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 20) {
-                            VStack(alignment: .leading) {
-                                Text("Temperature (°F): \(String(format: "%.1f", temperature))")
-                                Slider(value: $temperature, in: 95...105, step: 0.1)
-                            }
-
-                            VStack(alignment: .leading) {
-                                Text("Respiratory Rate: \(Int(respiratoryRate))")
-                                Slider(value: $respiratoryRate, in: 10...40, step: 1)
-                            }
-
-                            VStack(alignment: .leading) {
-                                Text("Blood Pressure: \(Int(bloodPressure))")
-                                Slider(value: $bloodPressure, in: 80...200, step: 1)
-                            }
-
-                            VStack(alignment: .leading) {
-                                Text("SpO₂: \(Int(spo2))%")
-                                Slider(value: $spo2, in: 90...100, step: 1)
-                            }
-
-                            VStack(alignment: .leading) {
-                                Text("Heart Rate: \(Int(heartRate))")
-                                Slider(value: $heartRate, in: 40...150, step: 1)
-                            }
-
-                            VStack(alignment: .leading) {
-                                Text("Glucose: \(Int(glucose))")
-                                Slider(value: $glucose, in: 70...300, step: 1)
-                            }
-                        }
-
-                    }
+                    // Slide 1: Height / Weight / Vitals
+                    heightWeightVitalsSlide
                 } else if currentSlide == 1 {
                     // Slide 2: Chief Complaint
-                    VStack(spacing: 20) {
-                        Text("Chief Complaint")
-                            .font(.title2)
-                            .fontWeight(.semibold)
-                        TextEditor(text: $patientModel.reasonForVisit)
-                            .frame(height: 150)
-                            .padding()
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color.gray.opacity(0.5), lineWidth: 1)
-                            )
-                    }
+                    chiefComplaintSlide
                 } else if currentSlide == 2 {
-                    // Slide 3: Pain Indicator + Recent Travel/Illness
-                    VStack(spacing: 20) {
-                        Text("Pain Indicator")
-                            .font(.title2)
-                            .fontWeight(.semibold)
-
-                        Slider(value: $painLevel, in: 1...10, step: 1)
-                        Text("Pain Level: \(Int(painLevel))")
-                            .font(.headline)
-
-                        // New questions using ChoiceRow
-                        Text("Recent Travel?")
-                            .font(.headline)
-
-                        ChoiceRow(
-                            title: "Yes",
-                            isSelected: recentTravel,
-                            action: { recentTravel = true }
-                        )
-                        ChoiceRow(
-                            title: "No",
-                            isSelected: !recentTravel,
-                            action: { recentTravel = false }
-                        )
-
-                        Text("Recent Illness?")
-                            .font(.headline)
-                        ChoiceRow(
-                            title: "Fever",
-                            isSelected: recentIllnessSelection == "Fever",
-                            action: { recentIllnessSelection = "Fever" }
-                        )
-                        ChoiceRow(
-                            title: "Cough",
-                            isSelected: recentIllnessSelection == "Cough",
-                            action: { recentIllnessSelection = "Cough" }
-                        )
-                        ChoiceRow(
-                            title: "Congestion",
-                            isSelected: recentIllnessSelection == "Congestion",
-                            action: { recentIllnessSelection = "Congestion" }
-                        )
-                        ChoiceRow(
-                            title: "None",
-                            isSelected: recentIllnessSelection == "None",
-                            action: { recentIllnessSelection = "None" }
-                        )
-                    }
+                    // Slide 3: Pain + Recent Travel/Illness
+                    painRecentTravelSlide
                 } else if currentSlide == 3 {
                     // Slide 4: Allergies
-                    VStack(spacing: 20) {
-                        Text("Allergies")
-                            .font(.title2)
-                            .fontWeight(.semibold)
-                        TextEditor(text: $allergies)
-                            .frame(height: 150)
-                            .padding()
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color.gray.opacity(0.5), lineWidth: 1)
-                            )
-                        Button(action: {
-                            noAllergies.toggle()
-                            if noAllergies {
-                                allergies = "None"
-                            } else {
-                                allergies = ""
-                            }
-                        }) {
-                            Text(noAllergies ? "Clear 'No Allergies'" : "No Allergies")
-                                .padding()
-                                .frame(maxWidth: .infinity)
-                                .background(Color.blue.opacity(0.2))
-                                .cornerRadius(8)
-                        }
-                    }
+                    allergiesSlide
                 } else if currentSlide == 4 {
                     // Slide 5: Recent Hospitalizations
-                    VStack(spacing: 20) {
-                        Text("Recent Hospitalizations")
-                            .font(.title2)
-                            .fontWeight(.semibold)
-                        TextEditor(text: $hospitalizations)
-                            .frame(height: 150)
-                            .padding()
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color.gray.opacity(0.5), lineWidth: 1)
-                            )
-                        Button(action: {
-                            noHospitalizations.toggle()
-                            if noHospitalizations {
-                                hospitalizations = "None"
-                            } else {
-                                hospitalizations = ""
-                            }
-                        }) {
-                            Text(noHospitalizations ? "Clear 'No Recent Hospitalizations'" : "No Recent Hospitalizations")
-                                .padding()
-                                .frame(maxWidth: .infinity)
-                                .background(Color.blue.opacity(0.2))
-                                .cornerRadius(8)
-                        }
-                    }
+                    hospitalizationsSlide
+                } else if currentSlide == 5 {
+                    // Slide 6: Medications
+                    medicationsSlide
+                } else if currentSlide == 6 {
+                    // Slide 7: Medical / Family History
+                    medicalFamilyHistorySlide
                 }
             }
             .padding()
             .animation(.easeInOut, value: currentSlide)
-            
+
             Spacer()
             
-            // Navigation buttons at the bottom
+            // Bottom navigation
             HStack {
                 if currentSlide > 0 {
                     Button(action: {
@@ -257,7 +106,8 @@ struct VitalsStepView: View {
                 
                 Spacer()
                 
-                if currentSlide < 4 {
+                // If not on the last slide, show Next; otherwise Submit
+                if currentSlide < 6 {
                     Button(action: {
                         withAnimation {
                             currentSlide += 1
@@ -288,21 +138,512 @@ struct VitalsStepView: View {
         .padding()
     }
     
-    // Called when the user taps the final Submit button.
+    // MARK: - Slides
+    
+    private var heightWeightVitalsSlide: some View {
+        VStack(spacing: 20) {
+            Text("Select Your Height and Weight")
+                .font(.title2)
+                .fontWeight(.semibold)
+            
+            HStack(spacing: 40) {
+                VStack {
+                    Text("Height (cm)")
+                        .font(.subheadline)
+                    Picker("Height", selection: $selectedHeight) {
+                        ForEach(heights, id: \.self) { height in
+                            Text("\(height)")
+                        }
+                    }
+                    .pickerStyle(WheelPickerStyle())
+                    .frame(maxWidth: 100)
+                }
+                
+                VStack {
+                    Text("Weight (kg)")
+                        .font(.subheadline)
+                    Picker("Weight", selection: $selectedWeight) {
+                        ForEach(weights, id: \.self) { weight in
+                            Text("\(weight)")
+                        }
+                    }
+                    .pickerStyle(WheelPickerStyle())
+                    .frame(maxWidth: 100)
+                }
+            }
+            
+            // Sliders in a 2x3 grid:
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 20) {
+                VStack(alignment: .leading) {
+                    Text("Temperature (°F): \(String(format: "%.1f", temperature))")
+                    Slider(value: $temperature, in: 95...105, step: 0.1)
+                }
+                VStack(alignment: .leading) {
+                    Text("Respiratory Rate: \(Int(respiratoryRate))")
+                    Slider(value: $respiratoryRate, in: 10...40, step: 1)
+                }
+                VStack(alignment: .leading) {
+                    Text("Blood Pressure: \(Int(bloodPressure))")
+                    Slider(value: $bloodPressure, in: 80...200, step: 1)
+                }
+                VStack(alignment: .leading) {
+                    Text("SpO₂: \(Int(spo2))%")
+                    Slider(value: $spo2, in: 90...100, step: 1)
+                }
+                VStack(alignment: .leading) {
+                    Text("Heart Rate: \(Int(heartRate))")
+                    Slider(value: $heartRate, in: 40...150, step: 1)
+                }
+                VStack(alignment: .leading) {
+                    Text("Glucose: \(Int(glucose))")
+                    Slider(value: $glucose, in: 70...300, step: 1)
+                }
+            }
+        }
+    }
+    
+    private var chiefComplaintSlide: some View {
+        VStack(spacing: 20) {
+            Text("Chief Complaint")
+                .font(.title2)
+                .fontWeight(.semibold)
+            TextEditor(text: $patientModel.reasonForVisit)
+                .frame(height: 150)
+                .padding()
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.gray.opacity(0.5), lineWidth: 1)
+                )
+        }
+    }
+    
+    private var painRecentTravelSlide: some View {
+        VStack(spacing: 20) {
+            Text("Pain Indicator")
+                .font(.title2)
+                .fontWeight(.semibold)
+            
+            Slider(value: $painLevel, in: 1...10, step: 1)
+            Text("Pain Level: \(Int(painLevel))")
+                .font(.headline)
+            
+            Text("Recent Travel?")
+                .font(.headline)
+            
+            ChoiceRow(
+                title: "Yes",
+                isSelected: recentTravel,
+                action: { recentTravel = true }
+            )
+            ChoiceRow(
+                title: "No",
+                isSelected: !recentTravel,
+                action: { recentTravel = false }
+            )
+            
+            Text("Recent Illness?")
+                .font(.headline)
+            ChoiceRow(
+                title: "Fever",
+                isSelected: recentIllnessSelection == "Fever",
+                action: { recentIllnessSelection = "Fever" }
+            )
+            ChoiceRow(
+                title: "Cough",
+                isSelected: recentIllnessSelection == "Cough",
+                action: { recentIllnessSelection = "Cough" }
+            )
+            ChoiceRow(
+                title: "Congestion",
+                isSelected: recentIllnessSelection == "Congestion",
+                action: { recentIllnessSelection = "Congestion" }
+            )
+            ChoiceRow(
+                title: "None",
+                isSelected: recentIllnessSelection == "None",
+                action: { recentIllnessSelection = "None" }
+            )
+        }
+    }
+    
+    private var allergiesSlide: some View {
+        VStack(spacing: 20) {
+            Text("Allergies")
+                .font(.title2)
+                .fontWeight(.semibold)
+            TextEditor(text: $allergies)
+                .frame(height: 150)
+                .padding()
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.gray.opacity(0.5), lineWidth: 1)
+                )
+            Button(action: {
+                noAllergies.toggle()
+                if noAllergies {
+                    allergies = "None"
+                } else {
+                    allergies = ""
+                }
+            }) {
+                Text(noAllergies ? "Clear 'No Allergies'" : "No Allergies")
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(Color.blue.opacity(0.2))
+                    .cornerRadius(8)
+            }
+        }
+    }
+    
+    private var hospitalizationsSlide: some View {
+        VStack(spacing: 20) {
+            Text("Recent Hospitalizations")
+                .font(.title2)
+                .fontWeight(.semibold)
+            TextEditor(text: $hospitalizations)
+                .frame(height: 150)
+                .padding()
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.gray.opacity(0.5), lineWidth: 1)
+                )
+            Button(action: {
+                noHospitalizations.toggle()
+                if noHospitalizations {
+                    hospitalizations = "None"
+                } else {
+                    hospitalizations = ""
+                }
+            }) {
+                Text(noHospitalizations ? "Clear 'No Recent Hospitalizations'" : "No Recent Hospitalizations")
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(Color.blue.opacity(0.2))
+                    .cornerRadius(8)
+            }
+        }
+    }
+    
+    private var medicationsSlide: some View {
+        VStack(spacing: 20) {
+            Text("Current Medications")
+                .font(.title2)
+                .fontWeight(.semibold)
+            
+            // Header row
+            HStack {
+                Text("Medication Name")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                Text("Dosage")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                Text("Frequency")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                Text("Start Date")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                Text("") // Empty space for delete button
+                    .frame(width: 40)
+            }
+            .padding(.horizontal)
+            
+            ScrollView {
+                VStack(spacing: 10) {
+                    ForEach(Array(medications.enumerated()), id: \.element.id) { index, _ in
+                        HStack {
+                            TextField("Med name", text: $medications[index].name)
+                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                                .frame(maxWidth: .infinity)
+                            
+                            TextField("Dose", text: $medications[index].dosage)
+                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                                .frame(maxWidth: .infinity)
+                            
+                            TextField("Freq", text: $medications[index].frequency)
+                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                                .frame(maxWidth: .infinity)
+                            
+                            DatePicker(
+                                "",
+                                selection: $medications[index].startDate,
+                                displayedComponents: .date
+                            )
+                            .frame(maxWidth: .infinity)
+                            .labelsHidden()
+                            
+                            Button(action: {
+                                if medications.count > 1 {
+                                    medications.remove(at: index)
+                                }
+                            }) {
+                                Image(systemName: "trash")
+                                    .foregroundColor(.red)
+                            }
+                            .frame(width: 40)
+                            .disabled(medications.count <= 1)
+                        }
+                    }
+                }
+                .padding(.horizontal)
+            }
+            .frame(height: 200)
+            
+            Button(action: {
+                medications.append(Medication())
+            }) {
+                HStack {
+                    Image(systemName: "plus.circle")
+                    Text("Add Medication")
+                }
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(Color.blue.opacity(0.2))
+                .cornerRadius(8)
+            }
+        }
+    }
+    
+    // MARK: - The New Slide for Medical/Family History
+    
+    private var medicalFamilyHistorySlide: some View {
+        VStack(spacing: 20) {
+            Text("Medical / Family Health History")
+                .font(.title2)
+                .fontWeight(.semibold)
+            
+            // Self history
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Self: Select all that apply")
+                    .font(.headline)
+                MultiSelectSearchView(
+                    title: "Search or Select Condition",
+                    allOptions: historyConditions,
+                    selectedOptions: $selfMedicalHistory
+                )
+            }
+            .padding()
+            .background(Color.gray.opacity(0.1))
+            .cornerRadius(8)
+            
+            // Family history
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Family: Select all that apply")
+                    .font(.headline)
+                MultiSelectSearchView(
+                    title: "Search or Select Condition",
+                    allOptions: historyConditions,
+                    selectedOptions: $familyMedicalHistory
+                )
+            }
+            .padding()
+            .background(Color.gray.opacity(0.1))
+            .cornerRadius(8)
+        }
+    }
+    
+    // A list of “common” conditions to show in the multi-select
+    private var historyConditions: [String] {
+        [
+            "Hypertension", 
+            "Diabetes", 
+            "Cancer", 
+            "Cholesterol", 
+            "DVT/PE", 
+            "HIV/AIDS", 
+            "Kidney Disease",
+            "Diverticulitis/Diverticulosis",
+            "Stroke",
+            "Heart Disease",
+            "Depression",
+            "Arthritis",
+            "GERD",
+            "Gout",
+            "Other"  // We'll handle "Other" as a special case
+        ]
+    }
+    
+    // MARK: - Final Submission
     private func submitForm() {
-        // Combine all values and perform submission (replace this with your real logic)
+        // Combine all values and perform submission
         print("Height: \(selectedHeight), Weight: \(selectedWeight)")
         print("Chief Complaint: \(chiefComplaint)")
         print("Pain Level: \(Int(painLevel))")
         print("Allergies: \(allergies)")
         print("Recent Hospitalizations: \(hospitalizations)")
         print("Recent Illness: \(recentIllnessSelection)")
-        // TODO: Add form submission logic (e.g., send data to backend)
+        
+        // Print medications
+        for med in medications {
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateStyle = .short
+            let startDateStr = dateFormatter.string(from: med.startDate)
+            print("Medication: \(med.name), Dosage: \(med.dosage), Frequency: \(med.frequency), Start Date: \(startDateStr)")
+        }
+        
+        // Print medical/family history
+        print("Self Medical History: \(selfMedicalHistory)")
+        print("Family Medical History: \(familyMedicalHistory)")
+        
+        onComplete()
     }
 }
 
-struct VitalsStepView_Previews: PreviewProvider {
-    static var previews: some View {
-        VitalsStepView(onComplete: {}, patientModel: PatientModel())
+struct MultiSelectSearchView: View {
+    let title: String
+    let allOptions: [String]
+    @Binding var selectedOptions: [String]
+    
+    @State private var searchText: String = ""
+    @State private var customOtherText: String = ""
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            // Search field with Add button
+            HStack {
+                TextField(title, text: $searchText)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                
+                Button(action: {
+                    addCustomEntry()
+                }) {
+                    Text("Add")
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(5)
+                }
+                .disabled(searchText.isEmpty)
+            }
+            .padding(.bottom, 5)
+            
+            // Filtered list of matching options
+            let filtered = allOptions.filter {
+                searchText.isEmpty 
+                || $0.lowercased().contains(searchText.lowercased())
+            }
+            
+            ScrollView {
+                VStack(alignment: .leading, spacing: 10) {
+                    ForEach(filtered, id: \.self) { option in
+                        Button {
+                            toggleOption(option)
+                        } label: {
+                            HStack {
+                                Text(option)
+                                Spacer()
+                                if selectedOptions.contains(option) {
+                                    Image(systemName: "checkmark")
+                                        .foregroundColor(.blue)
+                                }
+                            }
+                            .padding(.vertical, 4)
+                            .padding(.horizontal, 8)
+                            .background(Color.white)
+                        }
+                        .foregroundColor(.primary)
+                        .cornerRadius(8)
+                    }
+                }
+            }
+            .frame(maxHeight: 120) // Reduced height to make room for selections
+            
+            // If "Other" is in selected options, show a text field for custom entry
+            if selectedOptions.contains("Other") {
+                VStack(alignment: .leading, spacing: 5) {
+                    Text("Please specify 'Other':")
+                        .font(.subheadline)
+                    TextField("Enter custom condition", text: $customOtherText)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .onChange(of: customOtherText) { newValue in
+                            updateCustomOther(newValue)
+                        }
+                }
+            }
+            
+            // Display selected options with remove functionality
+            VStack(alignment: .leading, spacing: 5) {
+                Text("Selected Items:")
+                    .font(.headline)
+                    .padding(.top, 5)
+                
+                if selectedOptions.isEmpty {
+                    Text("None selected")
+                        .italic()
+                        .foregroundColor(.gray)
+                } else {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach(selectedOptions, id: \.self) { option in
+                                HStack(spacing: 4) {
+                                    Text(option == "Other" ? (customOtherText.isEmpty ? "Other" : customOtherText) : option)
+                                        .lineLimit(1)
+                                    
+                                    Button(action: {
+                                        toggleOption(option)
+                                    }) {
+                                        Image(systemName: "xmark.circle.fill")
+                                            .foregroundColor(.red)
+                                    }
+                                    .buttonStyle(BorderlessButtonStyle())
+                                }
+                                .padding(.vertical, 4)
+                                .padding(.horizontal, 8)
+                                .background(
+                                    Capsule()
+                                        .fill(Color.blue.opacity(0.2))
+                                )
+                            }
+                        }
+                    }
+                    .frame(height: 40)
+                }
+            }
+            .padding(.vertical, 5)
+            .padding(.horizontal, 8)
+            .background(Color.gray.opacity(0.1))
+            .cornerRadius(8)
+        }
+    }
+    
+    private func toggleOption(_ option: String) {
+        if selectedOptions.contains(option) {
+            // Deselect
+            selectedOptions.removeAll { $0 == option }
+            // If they deselect "Other", clear the custom text
+            if option == "Other" {
+                customOtherText = ""
+            }
+        } else {
+            // Select
+            selectedOptions.append(option)
+        }
+    }
+    
+    private func updateCustomOther(_ text: String) {
+        // If user typed something for 'Other', you can store it
+        // as a separate entry or override "Other" in the array.
+        // For simplicity, we'll keep "Other" in selectedOptions,
+        // and rely on `customOtherText` for the actual text.
+    }
+    
+    private func addCustomEntry() {
+        guard !searchText.isEmpty else { return }
+        
+        // Check if this entry already exists in our options
+        if allOptions.contains(searchText) {
+            // If it's a predefined option, just select it
+            if !selectedOptions.contains(searchText) {
+                selectedOptions.append(searchText)
+            }
+        } else {
+            // Add as a custom entry directly
+            selectedOptions.append(searchText)
+        }
+        
+        // Clear the search field after adding
+        searchText = ""
     }
 }
