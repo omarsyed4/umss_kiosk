@@ -362,8 +362,18 @@ struct ContentView: View {
     // MARK: - PDF Preview and Upload Functions
     private func previewPDFAction() {
         isGeneratingPDF = true
+        
+        // First ensure we have a token before attempting to generate the PDF
         if accessToken == nil {
             getAccessToken { token in
+                guard let token = token else {
+                    DispatchQueue.main.async {
+                        self.isGeneratingPDF = false
+                        print("Failed to get access token")
+                    }
+                    return
+                }
+                
                 DispatchQueue.main.async {
                     self.accessToken = token
                     self.generateAndShowPDF()
@@ -375,10 +385,23 @@ struct ContentView: View {
     }
     
     private func generateAndShowPDF() {
+        guard let _ = accessToken else {
+            isGeneratingPDF = false
+            print("No access token available for PDF generation")
+            return
+        }
+        
         let generatedPDF = viewModel.generateFilledPDF()
-        self.pdfDocument = generatedPDF
-        isGeneratingPDF = false
-        showPDFPreview = true
+        
+        // Only show PDF preview if we have a valid PDF document
+        if let pdf = generatedPDF, pdf.pageCount > 0 {
+            self.pdfDocument = generatedPDF
+            isGeneratingPDF = false
+            showPDFPreview = true
+        } else {
+            isGeneratingPDF = false
+            print("Failed to generate valid PDF")
+        }
     }
     
     private func handleUpload() {
