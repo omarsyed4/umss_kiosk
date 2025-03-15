@@ -86,12 +86,14 @@ class AppointmentViewModel: ObservableObject {
     @Published var appointments: [Appointment] = []
     @Published var isClinicDay = false
     @Published var selectedOfficeId: String?
+    @Published var providers: [Provider] = []  // Add this line to store providers
     
     private var db = Firestore.firestore()
     
     func checkForTodayClinic() {
         isLoading = true
         errorMessage = nil
+        providers = [] // Reset providers list when checking for clinic day
         
         // Format today's date as M-D-YY for Firestore document query
         let dateFormatter = DateFormatter()
@@ -129,6 +131,7 @@ class AppointmentViewModel: ObservableObject {
                 
                 // Use the first clinic document found for today
                 let document = documents[0]
+                print("Found today's clinic document: \(document.documentID)")
                 
                 // Extract the officeId from the document ID
                 // Format: M-D-YY-officeId-startTime
@@ -149,9 +152,107 @@ class AppointmentViewModel: ObservableObject {
                 self.selectedOfficeId = officeId
                 self.isClinicDay = true
                 
-                // Now fetch the office and its appointments
-                self.fetchOfficeAndAppointments(officeId: officeId)
+                // Extract provider UIDs from the day document
+                if let providerUIDs = document.data()["providers"] as? [String] {
+                    print("Found providers data in day document: \(providerUIDs)")
+                    
+                    // Now fetch detailed provider info
+                    self.fetchProvidersFromVolunteers(uids: providerUIDs)
+                } else {
+                    print("No providers field found in day document or it's not in expected format")
+                    self.providers = []
+                    
+                    // Continue with fetching office and appointments
+                    self.fetchOfficeAndAppointments(officeId: officeId)
+                }
             }
+    }
+    
+    // New method to fetch provider details from volunteers collection
+    private func fetchProvidersFromVolunteers(uids: [String]) {
+        guard !uids.isEmpty, let officeId = selectedOfficeId else {
+            print("No provider UIDs to fetch or no office ID selected")
+            self.providers = []
+            if let officeId = selectedOfficeId {
+                self.fetchOfficeAndAppointments(officeId: officeId)
+            } else {
+                self.isLoading = false
+            }
+            return
+        }
+        
+        print("Fetching details for \(uids.count) providers from volunteers collection")
+        
+        // Create a dispatch group to wait for all provider queries to complete
+        let dispatchGroup = DispatchGroup()
+        var fetchedProviders: [Provider] = []
+        var errors: [String] = []
+        
+        for uid in uids {
+            dispatchGroup.enter()
+            
+            db.collection("volunteers").document(uid).getDocument { [weak self] document, error in
+                defer { dispatchGroup.leave() }
+                guard let self = self else { return }
+                
+                if let error = error {
+                    print("Error fetching volunteer \(uid): \(error.localizedDescription)")
+                    errors.append("Failed to fetch volunteer \(uid): \(error.localizedDescription)")
+                    return
+                }
+                
+                guard let document = document, document.exists else {
+                    print("No document found for volunteer \(uid)")
+                    errors.append("No document found for volunteer \(uid)")
+                    return
+                }
+                
+                let data = document.data() ?? [:]
+                print("Volunteer document data for \(uid): \(data)")
+                
+                // Extract firstName and lastName from volunteer document
+                if let firstName = data["firstName"] as? String,
+                   let lastName = data["lastName"] as? String {
+                    let fullName = "\(firstName) \(lastName)"
+                    
+                    // Get specialty if available, default to "Provider" if not
+                    let specialty = data["specialty"] as? String ?? "Provider"
+                    
+                    let provider = Provider(
+                        id: uid,
+                        name: fullName,
+                        specialty: specialty
+                    )
+                    
+                    fetchedProviders.append(provider)
+                    print("Added provider: \(fullName) with specialty: \(specialty)")
+                } else {
+                    print("Missing firstName or lastName in volunteer document for \(uid)")
+                    errors.append("Missing firstName or lastName in volunteer document for \(uid)")
+                }
+            }
+        }
+        
+        // When all providers are fetched, update the published providers array
+        dispatchGroup.notify(queue: .main) { [weak self] in
+            guard let self = self else { return }
+            
+            self.providers = fetchedProviders
+            
+            if fetchedProviders.isEmpty && !errors.isEmpty {
+                print("Failed to fetch providers: \(errors.joined(separator: "; "))")
+                self.errorMessage = "Failed to load providers: \(errors.first ?? "Unknown error")"
+            }
+            
+            print("Fetched \(fetchedProviders.count) providers from volunteers collection")
+            
+            // Continue with fetching office and appointments
+            if let officeId = self.selectedOfficeId {
+                self.fetchOfficeAndAppointments(officeId: officeId)
+            } else {
+                self.isLoading = false
+            }
+        }
     }
     
     private func fetchOfficeAndAppointments(officeId: String) {
@@ -269,4 +370,47 @@ class AppointmentViewModel: ObservableObject {
                 }
             }
     }
+    
+    // New method to send patient to doctor
+    func sendPatientToDoctor(appointmentId: String, providerId: String, completion: @escaping (Bool) -> Void) {
+        guard let officeId = selectedOfficeId else {
+            print("No office ID selected for sending patient to doctor")
+            completion(false)
+            return
+        }
+        
+        // Find the provider's name
+        let providerName = providers.first(where: { $0.id == providerId })?.name ?? "Unknown Provider"
+        
+        print("Sending patient to doctor: \(providerName) (ID: \(providerId))")
+        
+        let appointmentRef = db.collection("offices")
+            .document(officeId)
+            .collection("appointments")
+            .document(appointmentId)
+        
+        appointmentRef.updateData([
+            "assignedProviderId": providerId,
+            "assignedProviderName": providerName,
+            "seenDoctor": false,  // They haven't seen the doctor yet, just assigned
+            "vitalsDone": true,   // Vitals are completed
+            "sentToDoctor": true, // Mark as sent to doctor
+            "sentToDoctorTime": Timestamp(date: Date())
+        ]) { error in
+            if let error = error {
+                print("Error updating appointment: \(error.localizedDescription)")
+                completion(false)
+            } else {
+                print("Successfully sent patient to doctor \(providerName)")
+                completion(true)
+            }
+        }
+    }
+}
+
+// Updated Provider model
+struct Provider: Identifiable {
+    let id: String
+    let name: String
+    let specialty: String
 }

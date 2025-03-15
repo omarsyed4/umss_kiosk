@@ -20,6 +20,7 @@ struct ContentView: View {
         case signature = "Signature"
         case uploadDoc = "Check-In Doc Upload"
         case vitals = "Vitals"
+        case doctorSelect = "Doctor Selection"  // Added new step
         
         var id: Self { self }
     }
@@ -107,6 +108,9 @@ struct ContentView: View {
                     steps.append(.uploadDoc)
                     if isUploadDocComplete {
                         steps.append(.vitals)
+                        if isVitalsComplete {
+                            steps.append(.doctorSelect)
+                        }
                     }
                 }
             }
@@ -150,6 +154,8 @@ struct ContentView: View {
                                         Image(systemName: "ecg.text.page")
                                     case .vitals:
                                         Image(systemName: "heart.text.clipboard")
+                                    case .doctorSelect:
+                                        Image(systemName: "stethoscope")
                                     }
                                 }
                                 .frame(width: 24)
@@ -306,10 +312,23 @@ struct ContentView: View {
             )
         case .vitals:
             VitalsStepView(onComplete: {
-                // After vitals, finish the flow (customize as needed)
-                viewModel.resetPatientData()
-                inPatientFlow = false
+                // After vitals, refresh providers list and proceed to doctor selection
+                appointmentVM.checkForTodayClinic() // Refresh providers list
+                isVitalsComplete = true
+                selectedFlowStep = .doctorSelect
             }, patientModel: viewModel.patientModel)
+        case .doctorSelect:
+            DoctorSelectView(
+                patientName: viewModel.patientModel.fullName,
+                appointmentId: viewModel.patientModel.appointmentId,
+                providers: appointmentVM.providers,
+                appointmentVM: appointmentVM,
+                onComplete: {
+                    // After doctor selection, finish the flow
+                    viewModel.resetPatientData()
+                    inPatientFlow = false
+                }
+            )
         }
     }
     
