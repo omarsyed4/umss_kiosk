@@ -4,7 +4,6 @@ struct VitalsStepView: View {
     let onComplete: () -> Void
     @ObservedObject var patientModel: PatientModel
     
-    // Current slide index (0...6)
     @State private var currentSlide: Int = 0
 
     // Slide 1: Height and Weight pickers
@@ -44,6 +43,11 @@ struct VitalsStepView: View {
     @State private var selfMedicalHistory: [String] = []
     @State private var familyMedicalHistory: [String] = []
 
+    // NEW: Slide 8: Surgical History + Assessment
+    @State private var surgicalHistory: [SurgicalHistory] = [SurgicalHistory()]
+    @State private var assessmentPlans: String = ""
+
+
     // Medication data structure
     struct Medication: Identifiable {
         var id = UUID()
@@ -53,34 +57,47 @@ struct VitalsStepView: View {
         var startDate: Date = Date()
     }
 
+    // MARK: - Data structure for Surgical History
+    struct SurgicalHistory: Identifiable {
+        var id = UUID()
+        var surgery: String = ""
+        var reason: String = ""
+        var year: String = ""
+        var hospital: String = ""
+    }
+
+
     var body: some View {
         VStack {
             Spacer()
 
             Group {
                 if currentSlide == 0 {
-                    // Slide 1: Height / Weight / Vitals
+                    // Slide 1
                     heightWeightVitalsSlide
                 } else if currentSlide == 1 {
-                    // Slide 2: Chief Complaint
+                    // Slide 2
                     chiefComplaintSlide
                 } else if currentSlide == 2 {
-                    // Slide 3: Pain + Recent Travel/Illness
+                    // Slide 3
                     painRecentTravelSlide
                 } else if currentSlide == 3 {
-                    // Slide 4: Allergies
+                    // Slide 4
                     allergiesSlide
                 } else if currentSlide == 4 {
-                    // Slide 5: Recent Hospitalizations
+                    // Slide 5
                     hospitalizationsSlide
                 } else if currentSlide == 5 {
-                    // Slide 6: Medications
+                    // Slide 6
                     medicationsSlide
                 } else if currentSlide == 6 {
-                    // Slide 7: Medical / Family History
+                    // Slide 7
                     medicalFamilyHistorySlide
+                } else if currentSlide == 7 {
+                    // Slide 8
+                    surgicalHistorySlide
                 }
-            }
+            }            
             .padding()
             .animation(.easeInOut, value: currentSlide)
 
@@ -107,7 +124,7 @@ struct VitalsStepView: View {
                 Spacer()
                 
                 // If not on the last slide, show Next; otherwise Submit
-                if currentSlide < 6 {
+                if currentSlide < 7 {
                     Button(action: {
                         withAnimation {
                             currentSlide += 1
@@ -123,6 +140,7 @@ struct VitalsStepView: View {
                         .cornerRadius(8)
                     }
                 } else {
+                    // Show Submit button on the last slide (7)
                     Button(action: submitForm) {
                         Text("Submit")
                             .padding()
@@ -405,8 +423,6 @@ struct VitalsStepView: View {
         }
     }
     
-    // MARK: - The New Slide for Medical/Family History
-    
     private var medicalFamilyHistorySlide: some View {
         VStack(spacing: 20) {
             Text("Medical / Family Health History")
@@ -440,6 +456,99 @@ struct VitalsStepView: View {
             .padding()
             .background(Color.gray.opacity(0.1))
             .cornerRadius(8)
+        }
+    }
+
+    private var surgicalHistorySlide: some View {
+        VStack(spacing: 20) {
+            Text("Surgical History")
+                .font(.title2)
+                .fontWeight(.semibold)
+            
+            // Header row
+            HStack {
+                Text("Surgery")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                Text("Reason")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                Text("Year")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                Text("Hospital")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                Text("") // Empty space for delete button
+                    .frame(width: 40)
+            }
+            .padding(.horizontal)
+            
+            // Scrollable list of surgeries
+            ScrollView {
+                VStack(spacing: 10) {
+                    ForEach(Array(surgicalHistory.enumerated()), id: \.element.id) { index, _ in
+                        HStack {
+                            TextField("Surgery", text: $surgicalHistory[index].surgery)
+                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                                .frame(maxWidth: .infinity)
+                            
+                            TextField("Reason", text: $surgicalHistory[index].reason)
+                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                                .frame(maxWidth: .infinity)
+                            
+                            TextField("Year", text: $surgicalHistory[index].year)
+                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                                .frame(maxWidth: .infinity)
+                            
+                            TextField("Hospital", text: $surgicalHistory[index].hospital)
+                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                                .frame(maxWidth: .infinity)
+                            
+                            Button(action: {
+                                if surgicalHistory.count > 1 {
+                                    surgicalHistory.remove(at: index)
+                                }
+                            }) {
+                                Image(systemName: "trash")
+                                    .foregroundColor(.red)
+                            }
+                            .frame(width: 40)
+                            .disabled(surgicalHistory.count <= 1)
+                        }
+                    }
+                }
+                .padding(.horizontal)
+            }
+            .frame(height: 200)
+            
+            // Add new surgery row
+            Button(action: {
+                surgicalHistory.append(SurgicalHistory())
+            }) {
+                HStack {
+                    Image(systemName: "plus.circle")
+                    Text("Add Surgery")
+                }
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(Color.blue.opacity(0.2))
+                .cornerRadius(8)
+            }
+            
+            // Optional: Assessment / Plans
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Assessment / Plans")
+                    .font(.headline)
+                TextEditor(text: $assessmentPlans)
+                    .frame(height: 100)
+                    .padding(4)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(Color.gray.opacity(0.5), lineWidth: 1)
+                    )
+            }
+            .padding(.top, 10)
         }
     }
     
@@ -485,6 +594,20 @@ struct VitalsStepView: View {
         // Print medical/family history
         print("Self Medical History: \(selfMedicalHistory)")
         print("Family Medical History: \(familyMedicalHistory)")
+        
+        // Print or store the surgical history
+        for surgeryItem in surgicalHistory {
+            print("Surgery: \(surgeryItem.surgery), Reason: \(surgeryItem.reason), Year: \(surgeryItem.year), Hospital: \(surgeryItem.hospital)")
+        }
+        
+        print("Assessment / Plans: \(assessmentPlans)")
+        
+        // Save vitals data to patient model if needed - FIXED ASSIGNMENT SYNTAX
+        patientModel.height = selectedHeight
+        patientModel.weight = selectedWeight
+        patientModel.temperature = temperature
+        patientModel.heartRate = Int(heartRate)
+        patientModel.painLevel = Int(painLevel)
         
         onComplete()
     }

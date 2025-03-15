@@ -74,9 +74,14 @@ class PatientModel: ObservableObject {
     @Published var selectedOfficeName: String = ""
     @Published var selectedOfficeAddress: String = ""
     @Published var selectedOfficePhone: String = ""
+    
+    @Published var height: Int = 0
+    @Published var weight: Int = 0
+    @Published var temperature: Double = 0
+    @Published var heartRate: Int = 0
+    @Published var painLevel: Int = 0
 
     // MARK: - Computed Properties for Readable Strings
-
     /// Returns the gender as a string. (e.g., "Male" or "Female")
     var genderString: String {
         return selectedGender
