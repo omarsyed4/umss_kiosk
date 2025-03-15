@@ -93,7 +93,7 @@ class AppointmentViewModel: ObservableObject {
         isLoading = true
         errorMessage = nil
         
-        // Format today's date as m-d-yy for Firestore document lookup
+        // Format today's date as M-D-YY for Firestore document query
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "M-d-yy"
         let today = Date()
@@ -101,45 +101,57 @@ class AppointmentViewModel: ObservableObject {
         
         print("Checking if today (\(todayString)) is a clinic day...")
         
-        // Query the days collection for today's date
-        db.collection("days").document(todayString).getDocument { [weak self] (document, error) in
-            guard let self = self else { return }
-            
-            if let error = error {
-                DispatchQueue.main.async {
-                    self.isLoading = false
-                    self.errorMessage = "Error checking clinic day: \(error.localizedDescription)"
-                    print("Firestore error: \(error.localizedDescription)")
+        // Query the days collection for documents starting with today's date
+        // Format is now M-D-YY-officeId-startTime
+        db.collection("days")
+            .whereField(FieldPath.documentID(), isGreaterThanOrEqualTo: todayString)
+            .whereField(FieldPath.documentID(), isLessThan: todayString + "\u{f8ff}")
+            .getDocuments { [weak self] (querySnapshot, error) in
+                guard let self = self else { return }
+                
+                if let error = error {
+                    DispatchQueue.main.async {
+                        self.isLoading = false
+                        self.errorMessage = "Error checking clinic day: \(error.localizedDescription)"
+                        print("Firestore error: \(error.localizedDescription)")
+                    }
+                    return
                 }
-                return
-            }
-            
-            guard let document = document, document.exists else {
-                DispatchQueue.main.async {
-                    self.isLoading = false
-                    self.isClinicDay = false
-                    print("Today is not a clinic day")
+                
+                guard let documents = querySnapshot?.documents, !documents.isEmpty else {
+                    DispatchQueue.main.async {
+                        self.isLoading = false
+                        self.isClinicDay = false
+                        print("Today is not a clinic day")
+                    }
+                    return
                 }
-                return
-            }
-            
-            // Today is a clinic day
-            guard let data = document.data(), let officeId = data["officeId"] as? String else {
-                DispatchQueue.main.async {
-                    self.isLoading = false
-                    self.errorMessage = "Invalid day document format"
-                    print("Day document doesn't contain officeId")
+                
+                // Use the first clinic document found for today
+                let document = documents[0]
+                
+                // Extract the officeId from the document ID
+                // Format: M-D-YY-officeId-startTime
+                let docIdComponents = document.documentID.components(separatedBy: "-")
+                guard docIdComponents.count >= 4 else {
+                    DispatchQueue.main.async {
+                        self.isLoading = false
+                        self.errorMessage = "Invalid day document format"
+                        print("Day document ID doesn't match expected format")
+                    }
+                    return
                 }
-                return
+                
+                // The officeId should be the fourth component (index 3)
+                let officeId = docIdComponents[3]
+                
+                print("Today is a clinic day at office ID: \(officeId)")
+                self.selectedOfficeId = officeId
+                self.isClinicDay = true
+                
+                // Now fetch the office and its appointments
+                self.fetchOfficeAndAppointments(officeId: officeId)
             }
-            
-            print("Today is a clinic day at office ID: \(officeId)")
-            self.selectedOfficeId = officeId
-            self.isClinicDay = true
-            
-            // Now fetch the office and its appointments
-            self.fetchOfficeAndAppointments(officeId: officeId)
-        }
     }
     
     private func fetchOfficeAndAppointments(officeId: String) {
