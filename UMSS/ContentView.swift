@@ -308,7 +308,8 @@ struct ContentView: View {
                     isUploadDocComplete = true
                     selectedFlowStep = .vitals
                 },
-                onPreviewPDF: { previewPDFAction() }
+                onPreviewPDF: { previewPDFAction() },
+                isGeneratingPDF: isGeneratingPDF
             )
         case .vitals:
             VitalsStepView(onComplete: {
@@ -395,15 +396,15 @@ struct ContentView: View {
                 
                 DispatchQueue.main.async {
                     self.accessToken = token
-                    self.generateAndShowPDF()
+                    self.generatePDF()
                 }
             }
         } else {
-            generateAndShowPDF()
+            generatePDF()
         }
     }
     
-    private func generateAndShowPDF() {
+    private func generatePDF() {
         guard let _ = accessToken else {
             isGeneratingPDF = false
             print("No access token available for PDF generation")
@@ -414,9 +415,12 @@ struct ContentView: View {
         
         // Only show PDF preview if we have a valid PDF document
         if let pdf = generatedPDF, pdf.pageCount > 0 {
-            self.pdfDocument = generatedPDF
-            isGeneratingPDF = false
-            showPDFPreview = true
+            self.pdfDocument = pdf
+            // Ensure PDF is fully set before showing preview
+            DispatchQueue.main.async { 
+                self.isGeneratingPDF = false
+                self.showPDFPreview = true
+            }
         } else {
             isGeneratingPDF = false
             print("Failed to generate valid PDF")
@@ -512,6 +516,7 @@ struct CheckInDocumentView: View {
     // Callbacks for finishing the flow or previewing the PDF.
     let onFinish: () -> Void
     let onPreviewPDF: () -> Void
+    let isGeneratingPDF: Bool
 
     // Add state to track if PDF has been previewed.
     @State private var hasPreviewedPDF = false
@@ -536,11 +541,15 @@ struct CheckInDocumentView: View {
             // Preview PDF Button
             Button(action: {
                 onPreviewPDF()
-                hasPreviewedPDF = true
+                // Don't set hasPreviewedPDF here - wait for PDF to be shown
             }) {
                 HStack {
+                    if isGeneratingPDF { // Pass this state from ContentView
+                        ProgressView()
+                            .padding(.trailing, 8)
+                    }
                     Image(systemName: "doc.text.viewfinder")
-                    Text("Preview PDF")
+                    Text(isGeneratingPDF ? "Generating PDF..." : "Preview PDF")
                 }
                 .font(.headline)
                 .padding()
@@ -549,7 +558,10 @@ struct CheckInDocumentView: View {
                 .foregroundColor(.white)
                 .cornerRadius(10)
             }
+            .disabled(isGeneratingPDF)
             .padding(.horizontal)
+
+
 
             // New "Next" button, disabled until PDF is previewed
             Button(action: onFinish) {
@@ -568,5 +580,15 @@ struct CheckInDocumentView: View {
         }
         .padding()
         .background(Color(UIColor.systemGroupedBackground).edgesIgnoringSafeArea(.all))
+        .onAppear {
+            // Reset preview state when view appears
+            hasPreviewedPDF = false
+        }
+        .onChange(of: isGeneratingPDF) { newValue in
+            // When PDF generation completes (goes from true to false)
+            if !newValue {
+                hasPreviewedPDF = true
+            }
+        }
     }
 }
