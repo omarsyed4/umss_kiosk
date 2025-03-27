@@ -420,6 +420,8 @@ struct ContentView: View {
             DispatchQueue.main.async { 
                 self.isGeneratingPDF = false
                 self.showPDFPreview = true
+                // Mark the upload doc step as complete when PDF is successfully generated and shown
+                self.isUploadDocComplete = true
             }
         } else {
             isGeneratingPDF = false
