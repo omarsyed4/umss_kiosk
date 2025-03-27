@@ -167,6 +167,7 @@ struct ContentView: View {
                                 if (step == .basicInfo && isBasicInfoComplete) ||
                                    (step == .demographics && isDemographicsComplete) ||
                                    (step == .vitals && isVitalsComplete) ||
+                                   (step == .uploadDoc && isUploadDocComplete) ||
                                    (step == .signature && isSignatureComplete) {
                                     Image(systemName: "checkmark.rectangle.fill")
                                         .foregroundColor(.green)
