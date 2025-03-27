@@ -9,6 +9,9 @@
 /* Begin PBXBuildFile section */
 		0F3581E52D50596300574AE0 /* GooglePlaces in Frameworks */ = {isa = PBXBuildFile; productRef = 0F3581E42D50596300574AE0 /* GooglePlaces */; };
 		0F3581E72D50596300574AE0 /* GooglePlacesSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 0F3581E62D50596300574AE0 /* GooglePlacesSwift */; };
+		0F82DF7C2D95E5BC00220BD7 /* ServiceAccount.json in Resources */ = {isa = PBXBuildFile; fileRef = 0F82DF7B2D95E5BC00220BD7 /* ServiceAccount.json */; };
+		0F82DF7D2D95E5BC00220BD7 /* ServiceAccount.json in Resources */ = {isa = PBXBuildFile; fileRef = 0F82DF7B2D95E5BC00220BD7 /* ServiceAccount.json */; };
+		0F82DF7E2D95E5BC00220BD7 /* ServiceAccount.json in Resources */ = {isa = PBXBuildFile; fileRef = 0F82DF7B2D95E5BC00220BD7 /* ServiceAccount.json */; };
 		0FDC23862D58727200CB988D /* SwiftJWT in Frameworks */ = {isa = PBXBuildFile; productRef = 0FDC23852D58727200CB988D /* SwiftJWT */; };
 		0FECB1A42D73AF0D00E30333 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 0FECB1A32D73AF0D00E30333 /* FirebaseAnalytics */; };
 		0FECB1A62D73AF0D00E30333 /* FirebaseAnalyticsOnDeviceConversion in Frameworks */ = {isa = PBXBuildFile; productRef = 0FECB1A52D73AF0D00E30333 /* FirebaseAnalyticsOnDeviceConversion */; };
@@ -54,27 +57,15 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		0F82DF7B2D95E5BC00220BD7 /* ServiceAccount.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = ServiceAccount.json; sourceTree = "<group>"; };
 		0FA2AE7C2D4B122D0030AE83 /* UMSS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = UMSS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0FA2AE912D4B122E0030AE83 /* UMSSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = UMSSTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		0FA2AE9B2D4B122E0030AE83 /* UMSSUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = UMSSUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		0F2C1B732D61599300839099 /* Exceptions for "UMSS" folder in "UMSS" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Integrations/Info.plist,
-			);
-			target = 0FA2AE7B2D4B122D0030AE83 /* UMSS */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		0F2C1B5E2D61599300839099 /* UMSS */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				0F2C1B732D61599300839099 /* Exceptions for "UMSS" folder in "UMSS" target */,
-			);
 			path = UMSS;
 			sourceTree = "<group>";
 		};
@@ -145,6 +136,7 @@
 		0FA2AE732D4B122D0030AE83 = {
 			isa = PBXGroup;
 			children = (
+				0F82DF7B2D95E5BC00220BD7 /* ServiceAccount.json */,
 				0F2C1B5E2D61599300839099 /* UMSS */,
 				0FA2AE942D4B122E0030AE83 /* UMSSTests */,
 				0FA2AE9E2D4B122E0030AE83 /* UMSSUITests */,
@@ -314,6 +306,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0F82DF7E2D95E5BC00220BD7 /* ServiceAccount.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -321,6 +314,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0F82DF7D2D95E5BC00220BD7 /* ServiceAccount.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -328,6 +322,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0F82DF7C2D95E5BC00220BD7 /* ServiceAccount.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
