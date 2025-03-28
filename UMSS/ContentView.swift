@@ -334,6 +334,19 @@ struct ContentView: View {
             )
         case .vitals:
             VitalsStepView(onComplete: {
+                // Update vitals status in Firebase if we have an appointment ID
+                if !viewModel.patientModel.appointmentId.isEmpty {
+                    appointmentVM.updateVitalsStatus(appointmentId: viewModel.patientModel.appointmentId) { success in
+                        if success {
+                            print("Vitals status updated successfully in Firebase")
+                        } else {
+                            print("Failed to update vitals status in Firebase")
+                        }
+                    }
+                } else {
+                    print("No appointment ID available to update vitals status")
+                }
+                
                 appointmentVM.checkForTodayClinic() // Refresh providers list
                 isVitalsComplete = true
                 selectedFlowStep = .doctorSelect
