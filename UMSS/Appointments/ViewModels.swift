@@ -435,6 +435,35 @@ class AppointmentViewModel: ObservableObject {
             }
         }
     }
+    
+    // New method to update the seenDoctor status
+    func updateSeenDoctorStatus(appointmentId: String, completion: @escaping (Bool) -> Void) {
+        guard let officeId = selectedOfficeId else {
+            print("No office ID selected for updating seenDoctor status")
+            completion(false)
+            return
+        }
+        
+        print("Updating seenDoctor status for appointment: \(appointmentId)")
+        
+        let appointmentRef = db.collection("offices")
+            .document(officeId)
+            .collection("appointments")
+            .document(appointmentId)
+        
+        appointmentRef.updateData([
+            "seenDoctor": true,
+            "seenDoctorTime": Timestamp(date: Date())
+        ]) { error in
+            if let error = error {
+                print("Error updating seenDoctor status: \(error.localizedDescription)")
+                completion(false)
+            } else {
+                print("Successfully updated seenDoctor status to completed")
+                completion(true)
+            }
+        }
+    }
 }
 
 // Updated Provider model

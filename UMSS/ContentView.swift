@@ -53,6 +53,7 @@ struct ContentView: View {
     // NEW vitals completion state
     @State private var isVitalsComplete: Bool = false
     @State private var isUploadDocComplete: Bool = false  // NEW uploadDoc completion state
+    @State private var isDoctorSelectComplete: Bool = false // NEW doctor selection completion state
     
     // Add validation override flags for already checked-in patients
     @State private var bypassBasicInfoValidation: Bool = false
@@ -188,7 +189,8 @@ struct ContentView: View {
                                    (step == .demographics && isDemographicsComplete) ||
                                    (step == .vitals && isVitalsComplete) ||
                                    (step == .uploadDoc && isUploadDocComplete) ||
-                                   (step == .signature && isSignatureComplete) {
+                                   (step == .signature && isSignatureComplete) ||
+                                   (step == .doctorSelect && isDoctorSelectComplete) {
                                     Image(systemName: "checkmark.rectangle.fill")
                                         .foregroundColor(.green)
                                 }
@@ -358,6 +360,7 @@ struct ContentView: View {
                 providers: appointmentVM.providers,
                 appointmentVM: appointmentVM,
                 onComplete: {
+                    isDoctorSelectComplete = true
                     viewModel.resetPatientData()
                     inPatientFlow = false
                 }
@@ -397,6 +400,15 @@ struct ContentView: View {
                             self.bypassDemographicsValidation = true
                             self.bypassSignatureValidation = true
                             self.isUploadDocComplete = true
+                            
+                            // Set vitals complete state based on appointment record
+                            self.isVitalsComplete = appointment.vitalsDone ?? false
+                            
+                            // If vitals are done and patient has seen doctor, mark doctor selection as complete too
+                            if appointment.vitalsDone == true && appointment.seenDoctor == true {
+                                self.isDoctorSelectComplete = true
+                            }
+                            
                             self.selectedFlowStep = appointment.vitalsDone ?? false ? .doctorSelect : .vitals
                         }
                         withAnimation {
