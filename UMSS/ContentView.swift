@@ -340,6 +340,12 @@ struct ContentView: View {
                     // Hide viewVitals from the main list as we'll handle it separately
                     if step != .viewVitals {
                         let isEnabled = (allowedSteps.contains(step) || step == .basicInfo)
+                        // Determine if step should be shown as completed but inaccessible
+                        let isCompletedButInaccessible = isVitalsComplete && 
+                            (step == .basicInfo || step == .demographics || 
+                             step == .signature || step == .uploadDoc || 
+                             step == .vitals || step == .doctorSelect)
+                        
                         HStack {
                             // Icon for each step.
                             Group {
@@ -361,8 +367,11 @@ struct ContentView: View {
                                 }
                             }
                             .frame(width: 24)
+                            .foregroundColor(isCompletedButInaccessible ? .gray : .primary)
                             
                             Text(step.rawValue)
+                                .strikethrough(isCompletedButInaccessible, color: .gray)
+                                .foregroundColor(isCompletedButInaccessible ? .gray : (isEnabled ? .primary : .gray))
                             
                             Spacer()
                             // Show a checkmark if the step is complete.
@@ -378,16 +387,19 @@ struct ContentView: View {
                         }
                         .contentShape(Rectangle())
                         .onTapGesture {
-                            // Only allow navigating to a step if it is allowed (or if it's a previous step).
-                            let allSteps = PatientFlowStep.allCases
-                            if let tappedIndex = allSteps.firstIndex(of: step),
-                               let currentIndex = allSteps.firstIndex(of: selectedFlowStep),
-                               tappedIndex <= currentIndex || isEnabled {
-                                selectedFlowStep = step
+                            // Only allow navigating if it's not a completed but inaccessible step
+                            if !isCompletedButInaccessible {
+                                // Only allow navigating to a step if it is allowed (or if it's a previous step).
+                                let allSteps = PatientFlowStep.allCases
+                                if let tappedIndex = allSteps.firstIndex(of: step),
+                                   let currentIndex = allSteps.firstIndex(of: selectedFlowStep),
+                                   tappedIndex <= currentIndex || isEnabled {
+                                    selectedFlowStep = step
+                                }
                             }
                         }
-                        .disabled(!isEnabled)
-                        .foregroundColor(isEnabled ? .primary : .gray)
+                        .disabled(!isEnabled || isCompletedButInaccessible)
+                        .foregroundColor(isEnabled && !isCompletedButInaccessible ? .primary : .gray)
                     }
                 }
             }
@@ -446,6 +458,7 @@ struct ContentView: View {
                             .foregroundColor(.blue)
                     } else {
                         Image(systemName: "xmark.bin")
+                            .foregroundColor(.red)
                         Text("Cancel")
                             .foregroundColor(.red)
                     }
