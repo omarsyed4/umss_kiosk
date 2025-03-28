@@ -94,61 +94,85 @@ struct AppointmentListView: View {
                 .cornerRadius(15)
             }
             
-            // Next Available Slot section (instead of showing all available slots)
-            if !availableAppointments.isEmpty {
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Next Available Slot")
-                        .font(.headline)
-                        .foregroundColor(.green)
-                        .padding(.top, 5)
-                        .onAppear {
-                            print("DEBUG: Rendering next available slot from \(availableAppointments.count) available appointments")
-                        }
+            // Walk-in Appointment section - always visible
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Create Walk-in Appointment")
+                    .font(.headline)
+                    .foregroundColor(.green)
+                    .padding(.top, 5)
+                
+                // Create a custom button that looks like an appointment row
+                Button(action: {
+                    // Create a new appointment with current time
+                    let dateFormatter = DateFormatter()
+                    dateFormatter.dateFormat = "h:mm a"
+                    let currentTimeString = dateFormatter.string(from: Date())
                     
-                    // Only show the first available slot (assuming already sorted by time)
-                    let nextAvailable = availableAppointments.first!
-                    AppointmentRow(
-                        appointment: nextAvailable,
-                        isSelected: selectedAppointment?.id == nextAvailable.id
+                    // Date formatter for the date parameter
+                    let dateOnlyFormatter = DateFormatter()
+                    dateOnlyFormatter.dateFormat = "yyyy-MM-dd"
+                    let currentDateString = dateOnlyFormatter.string(from: Date())
+                    
+                    // Create a new appointment with a unique ID
+                    let newAppointment = Appointment(
+                        id: UUID().uuidString,
+                        time: currentTimeString,
+                        date: currentDateString,  // Convert Date to String
+                        patientId: "", // Will be filled after patient registration
+                        patientName: "",  // Empty string instead of nil
+                        booked: true, // Mark as booked immediately
+                        isCheckedIn: false,
+                        seenDoctor: false,
+                        vitalsDone: false
                     )
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        print("DEBUG: Selected next available appointment: \(nextAvailable.id) at \(nextAvailable.time)")
-                        selectedAppointment = nextAvailable
-                        onAppointmentSelected?(nextAvailable)
-                        
-                        // Show continue button with animation when appointment is selected
-                        withAnimation(.easeIn(duration: 0.5)) {
-                            showContinueButton = true
-                        }
-                    }
-                    .onAppear {
-                        print("DEBUG: Displayed next available slot: \(nextAvailable.id) at time \(nextAvailable.time)")
-                    }
                     
-                    Text("Tap to select this slot for a walk-in appointment")
-                        .font(.caption)
-                        .foregroundColor(.gray)
-                        .padding(.bottom, 5)
-                }
-                .padding()
-                .background(Color(.systemGray6))
-                .cornerRadius(15)
-                .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
-            } else {
-                VStack(alignment: .leading) {
-                    Text("No available slots")
-                        .font(.caption)
-                        .foregroundColor(.gray)
-                        .onAppear {
-                            print("DEBUG: No available appointments to display")
+                    print("DEBUG: Created new walk-in appointment at \(currentTimeString)")
+                    selectedAppointment = newAppointment
+                    onAppointmentSelected?(newAppointment)
+                    
+                    // Show continue button with animation
+                    withAnimation(.easeIn(duration: 0.5)) {
+                        showContinueButton = true
+                    }
+                }) {
+                    HStack {
+                        Text(DateFormatter.localizedString(from: Date(), dateStyle: .none, timeStyle: .short))
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                            .frame(width: 80, alignment: .leading)
+                        
+                        Divider()
+                            .frame(height: 30)
+                        VStack(alignment: .leading) {
+                            Text("Available Now")
+                                .font(.body)
+                                .foregroundColor(.green)
                         }
+                        
+                        Spacer()
+                        
+                        Image(systemName: "plus.circle.fill")
+                            .foregroundColor(.green)
+                            .font(.system(size: 18))
+                    }
+                    .padding()
+                    .background(Color.white)
+                    .cornerRadius(20)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 20)
+                            .stroke(Color(.systemGray4), lineWidth: 1)
+                    )
                 }
-                .padding()
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color(.systemGray6))
-                .cornerRadius(15)
+                
+                Text("Create an immediate walk-in appointment for the current time")
+                    .font(.caption)
+                    .foregroundColor(.gray)
+                    .padding(.bottom, 5)
             }
+            .padding()
+            .background(Color(.systemGray6))
+            .cornerRadius(15)
+            .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
             
             // Continue Button that fades in
             if showContinueButton, let selected = selectedAppointment {
@@ -214,7 +238,6 @@ struct AppointmentRow: View {
                 if appointment.booked, appointment.patientName != nil {
                     Text(appointment.patientName ?? "Unknown")
                         .font(.headline)
-                        .font(.body)
                     Text(statusText)
                         .font(.caption)
                         .foregroundColor(statusColor)
