@@ -233,8 +233,8 @@ struct VitalsDisplayView: View {
                 }
                 
                 // Medications section
-                if let medications = vitalsData["medications"] as? [[String: Any]], !medications.isEmpty {
-                    VitalsCardView(title: "Medications", systemImage: "pill") {
+                VitalsCardView(title: "Medications", systemImage: "pill") {
+                    if let medications = vitalsData["medications"] as? [[String: Any]], !medications.isEmpty {
                         VStack(spacing: 12) {
                             ForEach(0..<medications.count, id: \.self) { index in
                                 let medication = medications[index]
@@ -283,12 +283,20 @@ struct VitalsDisplayView: View {
                                 }
                             }
                         }
+                    } else {
+                        Text("None")
+                            .italic()
+                            .foregroundColor(.secondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding()
+                            .background(Color.gray.opacity(0.1))
+                            .cornerRadius(8)
                     }
                 }
                 
                 // Surgical History section
-                if let surgicalHistory = vitalsData["surgicalHistory"] as? [[String: String]], !surgicalHistory.isEmpty {
-                    VitalsCardView(title: "Surgical History", systemImage: "scissors") {
+                VitalsCardView(title: "Surgical History", systemImage: "scissors") {
+                    if let surgicalHistory = vitalsData["surgicalHistory"] as? [[String: String]], !surgicalHistory.isEmpty {
                         VStack(spacing: 12) {
                             ForEach(0..<surgicalHistory.count, id: \.self) { index in
                                 let surgery = surgicalHistory[index]
@@ -337,6 +345,14 @@ struct VitalsDisplayView: View {
                                 }
                             }
                         }
+                    } else {
+                        Text("None")
+                            .italic()
+                            .foregroundColor(.secondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding()
+                            .background(Color.gray.opacity(0.1))
+                            .cornerRadius(8)
                     }
                 }
                 
