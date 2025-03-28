@@ -424,16 +424,32 @@ struct ContentView: View {
                 .padding(.bottom, 8)
             }
             
-            // Cancel button to reset patient data and return to dashboard.
+            // Conditional button - either "Back to Dashboard" or "Cancel"
             Button(action: {
-                viewModel.resetPatientData()
-                inPatientFlow = false
+                if isBasicInfoComplete && isDemographicsComplete {
+                    // Refresh dashboard data before returning
+                    appointmentVM.checkForTodayClinic()
+                    // Just return to dashboard without resetting data
+                    inPatientFlow = false
+                } else {
+                    // Reset patient data and return to dashboard
+                    viewModel.resetPatientData()
+                    // Refresh dashboard data
+                    appointmentVM.checkForTodayClinic()
+                    inPatientFlow = false
+                }
             }) {
                 HStack {
-                    Image(systemName: "xmark.bin")
-                    Text("Cancel")
+                    if isBasicInfoComplete && isDemographicsComplete {
+                        Image(systemName: "house")
+                        Text("Back to Dashboard")
+                            .foregroundColor(.blue)
+                    } else {
+                        Image(systemName: "xmark.bin")
+                        Text("Cancel")
+                            .foregroundColor(.red)
+                    }
                 }
-                .foregroundColor(.red)
                 .padding()
             }
             .frame(maxWidth: .infinity, alignment: .center)

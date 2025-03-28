@@ -135,23 +135,25 @@ struct DoctorSelectView: View {
         .padding()
         .alert(isPresented: $showConfirmation) {
             Alert(
-                title: Text(isSuccess ? "Success" : "Error"),
-                message: Text(isSuccess ? 
-                              (patientSentToDoctor ? "Patient has been sent to the doctor." : "Patient has been marked as seen by the doctor.") : 
-                              (patientSentToDoctor ? "Failed to send patient to doctor. Please try again." : "Failed to mark patient as seen. Please try again.")),
-                dismissButton: .default(Text("OK")) {
-                    if isSuccess {
-                        if !patientSentToDoctor {
-                            // If marking as seen was successful, return to dashboard
-                            onComplete()
-                        } else {
-                            // If sending to doctor was successful, show the mark as seen button
-                            canMarkAsSeen = true
-                        }
-                    }
+            title: Text(isSuccess ? "Success" : "Error"),
+            message: Text(isSuccess ? 
+                      (patientSentToDoctor ? "Patient has been sent to the doctor." : "Patient has been marked as seen by the doctor.") : 
+                      (patientSentToDoctor ? "Failed to send patient to doctor. Please try again." : "Failed to mark patient as seen. Please try again.")),
+            dismissButton: .default(Text("OK")) {
+                if isSuccess {
+                if !patientSentToDoctor {
+                    // If marking as seen was successful, return to dashboard
+                    appointmentVM.checkForTodayClinic()
+                    onComplete()
+                } else {
+                    // If sending to doctor was successful, show the mark as seen button
+                    canMarkAsSeen = true
                 }
+                }
+            }
             )
         }
+
         .onAppear {
             print("DoctorSelectView appeared with \(providers.count) providers")
             for (index, provider) in providers.enumerated() {
