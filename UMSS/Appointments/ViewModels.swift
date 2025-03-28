@@ -406,6 +406,35 @@ class AppointmentViewModel: ObservableObject {
             }
         }
     }
+    
+    // New method to update the vitals status
+    func updateVitalsStatus(appointmentId: String, completion: @escaping (Bool) -> Void) {
+        guard let officeId = selectedOfficeId else {
+            print("No office ID selected for updating vitals status")
+            completion(false)
+            return
+        }
+        
+        print("Updating vitals status for appointment: \(appointmentId)")
+        
+        let appointmentRef = db.collection("offices")
+            .document(officeId)
+            .collection("appointments")
+            .document(appointmentId)
+        
+        appointmentRef.updateData([
+            "vitalsDone": true,
+            "vitalsCompletedTime": Timestamp(date: Date())
+        ]) { error in
+            if let error = error {
+                print("Error updating vitals status: \(error.localizedDescription)")
+                completion(false)
+            } else {
+                print("Successfully updated vitals status to completed")
+                completion(true)
+            }
+        }
+    }
 }
 
 // Updated Provider model
