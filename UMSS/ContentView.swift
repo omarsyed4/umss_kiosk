@@ -407,34 +407,6 @@ struct ContentView: View {
             
             Spacer()
             
-            // View Vitals Button - only show if vitals have been completed, now at bottom
-            if isVitalsComplete {
-                Button(action: {
-                    selectedFlowStep = .viewVitals
-                }) {
-                    HStack {
-                        Image(systemName: "heart.text.square")
-                            .font(.system(size: 18))
-                        Text("View Vitals")
-                            .font(.headline)
-                        Spacer()
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 14))
-                    }
-                    .padding()
-                    .background(
-                        RoundedRectangle(cornerRadius: 10)
-                            .fill(UMSSBrand.navy.opacity(0.1))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 10)
-                                    .stroke(UMSSBrand.navy, lineWidth: 1)
-                            )
-                    )
-                    .foregroundColor(UMSSBrand.navy)
-                }
-                .padding(.horizontal)
-                .padding(.bottom, 8)
-            }
             
             // Conditional button - either "Back to Dashboard" or "Cancel"
             Button(action: {
@@ -491,6 +463,9 @@ struct ContentView: View {
     // MARK: - Appointment Handling
     private func handleAppointmentSelection(_ appointment: Appointment) {
         if appointment.booked == true && !appointment.patientId.isEmpty {
+            // Before loading new patient data, reset state to avoid data transfer
+            vitalsData = nil
+            
             isLoadingPatientData = true
             viewModel.patientModel.appointmentId = appointment.id
             isWalkIn = false
@@ -527,19 +502,26 @@ struct ContentView: View {
                 }
             }
         } else {
-            // Reset bypass flags for new patients
+            // For walk-ins: Reset all states first
+            viewModel.resetPatientData()
+            
+            // Clear all state variables to prevent data transfer
+            vitalsData = nil
+            isVitalsComplete = false
+            isUploadDocComplete = false
+            isDoctorSelectComplete = false
             bypassBasicInfoValidation = false
             bypassDemographicsValidation = false
             bypassSignatureValidation = false
             
+            // Then set the new appointment ID and walk-in flag
             viewModel.patientModel.appointmentId = appointment.id
-            viewModel.resetPatientData()
             isWalkIn = true
             inPatientFlow = true
             selectedFlowStep = .basicInfo
         }
     }
-    
+
     // MARK: - PDF Preview and Upload Functions
     private func previewPDFAction() {
         isGeneratingPDF = true
@@ -686,11 +668,13 @@ struct ContentView: View {
 //
 // MARK: - Dashboard and Document Upload Views
 //
-
 struct DashboardView: View {
     @ObservedObject var appointmentVM: AppointmentViewModel
     let handleWalkIn: () -> Void
     let handleAppointment: (Appointment) -> Void
+    
+    // Keep timer state to refresh the view periodically
+    @State private var timer: Timer? = nil
     
     var body: some View {
         ScrollView {
@@ -727,6 +711,19 @@ struct DashboardView: View {
                 
             }
             .padding()
+        }
+        .onAppear {
+            // Start a timer to update more frequently - every 10 seconds
+            // This ensures any displayed times will be refreshed periodically
+            self.timer = Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { _ in
+                // Force view refresh by triggering a state change in appointmentVM
+                appointmentVM.objectWillChange.send()
+            }
+        }
+        .onDisappear {
+            // Invalidate the timer when the view disappears
+            self.timer?.invalidate()
+            self.timer = nil
         }
     }
 }
