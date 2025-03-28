@@ -9,7 +9,14 @@ struct VitalsDisplayView: View {
             VStack(spacing: 20) {
                 // Basic vitals section
                 VitalsCardView(title: "Basic Vitals", systemImage: "heart.fill") {
-                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 20) {
+                LazyVGrid(
+                    columns: [
+                        GridItem(.flexible()),
+                        GridItem(.flexible()),
+                        GridItem(.flexible())
+                    ],
+                    spacing: 20
+                ) {
                         // Height and Weight
                         if let height = vitalsData["height"] as? Int {
                             VitalItemView(
