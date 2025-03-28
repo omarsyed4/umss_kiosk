@@ -54,8 +54,18 @@ struct ContentView: View {
     @State private var isVitalsComplete: Bool = false
     @State private var isUploadDocComplete: Bool = false  // NEW uploadDoc completion state
     
+    // Add validation override flags for already checked-in patients
+    @State private var bypassBasicInfoValidation: Bool = false
+    @State private var bypassDemographicsValidation: Bool = false 
+    @State private var bypassSignatureValidation: Bool = false
+    
     // MARK: - Computed Validation Properties
     private var isBasicInfoComplete: Bool {
+        // If bypass flag is set, return true without validation
+        if bypassBasicInfoValidation {
+            return true
+        }
+        
         let model = viewModel.patientModel
         let emailValid     = !model.email.trimmingCharacters(in: .whitespaces).isEmpty
         let firstNameValid = !model.firstName.trimmingCharacters(in: .whitespaces).isEmpty
@@ -84,6 +94,11 @@ struct ContentView: View {
     
     
     private var isDemographicsComplete: Bool {
+        // If bypass flag is set, return true without validation
+        if bypassDemographicsValidation {
+            return true
+        }
+        
         let model = viewModel.patientModel
         return !model.selectedGender.trimmingCharacters(in: .whitespaces).isEmpty &&
                !model.selectedRace.trimmingCharacters(in: .whitespaces).isEmpty &&
@@ -94,6 +109,11 @@ struct ContentView: View {
     }
     
     private var isSignatureComplete: Bool {
+        // If bypass flag is set, return true without validation
+        if bypassSignatureValidation {
+            return true
+        }
+        
         return viewModel.patientModel.signatureImage != nil
     }
     
@@ -303,10 +323,10 @@ struct ContentView: View {
                 nextButton(currentStep: .signature, nextStep: .uploadDoc, isComplete: isSignatureComplete)
             }
         case .uploadDoc:
-            // UPDATED: Instead of finishing the flow, mark upload doc as complete and navigate to vitals.
             CheckInDocumentView(
                 onFinish: {
                     isUploadDocComplete = true
+                    updateCheckInStatus()
                     selectedFlowStep = .vitals
                 },
                 onPreviewPDF: { previewPDFAction() },
@@ -314,7 +334,6 @@ struct ContentView: View {
             )
         case .vitals:
             VitalsStepView(onComplete: {
-                // After vitals, refresh providers list and proceed to doctor selection
                 appointmentVM.checkForTodayClinic() // Refresh providers list
                 isVitalsComplete = true
                 selectedFlowStep = .doctorSelect
@@ -326,7 +345,6 @@ struct ContentView: View {
                 providers: appointmentVM.providers,
                 appointmentVM: appointmentVM,
                 onComplete: {
-                    // After doctor selection, finish the flow
                     viewModel.resetPatientData()
                     inPatientFlow = false
                 }
@@ -352,29 +370,42 @@ struct ContentView: View {
     
     // MARK: - Appointment Handling
     private func handleAppointmentSelection(_ appointment: Appointment) {
-        // For booked appointments with existing patient data, load and jump to signature.
         if appointment.booked == true && !appointment.patientId.isEmpty {
             isLoadingPatientData = true
             viewModel.patientModel.appointmentId = appointment.id
-            isWalkIn = false  // set for booked appointments
+            isWalkIn = false
             viewModel.fetchPatientData(patientId: appointment.patientId) { success in
                 DispatchQueue.main.async {
                     self.isLoadingPatientData = false
                     if success {
+                        if appointment.isCheckedIn {
+                            // Set bypass flags instead of trying to directly assign computed properties
+                            self.bypassBasicInfoValidation = true
+                            self.bypassDemographicsValidation = true
+                            self.bypassSignatureValidation = true
+                            self.isUploadDocComplete = true
+                            self.selectedFlowStep = appointment.vitalsDone ?? false ? .doctorSelect : .vitals
+                        }
                         withAnimation {
                             inPatientFlow = true
-                            selectedFlowStep = .signature
+                            if !appointment.isCheckedIn {
+                                selectedFlowStep = .signature
+                            }
                         }
                     } else {
-                        // Handle error – e.g., show an alert.
+                        // Handle error
                     }
                 }
             }
         } else {
-            // For walk-ins or new appointments, reset and start at basic info.
+            // Reset bypass flags for new patients
+            bypassBasicInfoValidation = false
+            bypassDemographicsValidation = false
+            bypassSignatureValidation = false
+            
             viewModel.patientModel.appointmentId = appointment.id
             viewModel.resetPatientData()
-            isWalkIn = true  // set for walk-in appointments
+            isWalkIn = true
             inPatientFlow = true
             selectedFlowStep = .basicInfo
         }
@@ -383,8 +414,6 @@ struct ContentView: View {
     // MARK: - PDF Preview and Upload Functions
     private func previewPDFAction() {
         isGeneratingPDF = true
-        
-        // First ensure we have a token before attempting to generate the PDF
         if accessToken == nil {
             getAccessToken { token in
                 guard let token = token else {
@@ -394,7 +423,6 @@ struct ContentView: View {
                     }
                     return
                 }
-                
                 DispatchQueue.main.async {
                     self.accessToken = token
                     self.generatePDF()
@@ -414,15 +442,13 @@ struct ContentView: View {
         
         let generatedPDF = viewModel.generateFilledPDF()
         
-        // Only show PDF preview if we have a valid PDF document
         if let pdf = generatedPDF, pdf.pageCount > 0 {
             self.pdfDocument = pdf
-            // Ensure PDF is fully set before showing preview
             DispatchQueue.main.async { 
                 self.isGeneratingPDF = false
                 self.showPDFPreview = true
-                // Mark the upload doc step as complete when PDF is successfully generated and shown
                 self.isUploadDocComplete = true
+                self.updateCheckInStatus()
             }
         } else {
             isGeneratingPDF = false
@@ -462,6 +488,34 @@ struct ContentView: View {
                 case .failure(let error):
                     uploadStatus = "Upload error: \(error)"
                 }
+            }
+        }
+    }
+    
+    // MARK: - Update Check-In Status
+    private func updateCheckInStatus() {
+        guard !viewModel.patientModel.appointmentId.isEmpty,
+              let officeId = appointmentVM.selectedOfficeId else {
+            print("Cannot update check-in status: Missing appointment ID or office ID")
+            return
+        }
+        
+        print("Updating check-in status for appointment: \(viewModel.patientModel.appointmentId)")
+        
+        let db = Firestore.firestore()
+        let appointmentRef = db.collection("offices")
+            .document(officeId)
+            .collection("appointments")
+            .document(viewModel.patientModel.appointmentId)
+        
+        appointmentRef.updateData([
+            "isCheckedIn": true,
+            "checkedInTime": Timestamp(date: Date())
+        ]) { error in
+            if let error = error {
+                print("Error updating check-in status: \(error.localizedDescription)")
+            } else {
+                print("Successfully updated check-in status to true")
             }
         }
     }
