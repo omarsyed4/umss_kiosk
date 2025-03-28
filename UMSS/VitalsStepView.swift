@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct VitalsStepView: View {
-    let onComplete: () -> Void
+    let onComplete: ([String: Any]) -> Void
     @ObservedObject var patientModel: PatientModel
     
     @State private var currentSlide: Int = 0
@@ -609,7 +609,70 @@ struct VitalsStepView: View {
         patientModel.heartRate = Int(heartRate)
         patientModel.painLevel = Int(painLevel)
         
-        onComplete()
+        // Format medications as an array of dictionaries
+        let medicationsData = medications.map { med -> [String: Any] in
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateStyle = .short
+            let startDateStr = dateFormatter.string(from: med.startDate)
+            
+            return [
+                "name": med.name,
+                "dosage": med.dosage,
+                "frequency": med.frequency,
+                "startDate": startDateStr
+            ]
+        }
+        
+        // Format surgical history as an array of dictionaries
+        let surgicalHistoryData = surgicalHistory.map { surgery -> [String: String] in
+            return [
+                "surgery": surgery.surgery,
+                "reason": surgery.reason,
+                "year": surgery.year,
+                "hospital": surgery.hospital
+            ]
+        }
+        
+        // Create a dictionary of all vital measurements to store in Firestore
+        let vitalsData: [String: Any] = [
+            // Basic vitals
+            "height": selectedHeight,
+            "weight": selectedWeight,
+            "temperature": temperature,
+            "respiratoryRate": Int(respiratoryRate),
+            "bloodPressure": Int(bloodPressure),
+            "spo2": Int(spo2),
+            "heartRate": Int(heartRate),
+            "glucose": Int(glucose),
+            "painLevel": Int(painLevel),
+            
+            // Travel and illness
+            "recentTravel": recentTravel,
+            "recentIllness": recentIllnessSelection,
+            "chiefComplaint": patientModel.reasonForVisit,
+            
+            // Medical history
+            "selfMedicalHistory": selfMedicalHistory,
+            "familyMedicalHistory": familyMedicalHistory,
+            
+            // Allergies and hospitalizations
+            "allergies": allergies,
+            "hasAllergies": !noAllergies,
+            "hospitalizations": hospitalizations,
+            "hasHospitalizations": !noHospitalizations,
+            
+            // Assessment plans
+            "assessmentPlans": assessmentPlans,
+            
+            // Add medications and surgical history as organized submaps
+            "medications": medicationsData,
+            "surgicalHistory": surgicalHistoryData,
+            
+            // Add timestamp when vitals were recorded
+            "recordedAt": Date().timeIntervalSince1970
+        ]
+        
+        onComplete(vitalsData)
     }
 }
 
