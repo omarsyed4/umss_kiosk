@@ -235,15 +235,15 @@ struct AppointmentRow: View {
                         .font(.caption)
                 }
                 
-                if appointment.seenDoctor {
-                    Image(systemName: "stethoscope")
-                        .foregroundColor(.blue)
-                        .font(.caption)
-                }
-                
                 if let vitals = appointment.vitalsDone, vitals {
                     Image(systemName: "heart.fill")
                         .foregroundColor(.red)
+                        .font(.caption)
+                }
+                
+                if appointment.seenDoctor {
+                    Image(systemName: "stethoscope")
+                        .foregroundColor(.blue)
                         .font(.caption)
                 }
                 

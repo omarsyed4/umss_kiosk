@@ -20,7 +20,8 @@ struct ContentView: View {
         case signature = "Signature"
         case uploadDoc = "Check-In Doc Upload"
         case vitals = "Vitals"
-        case doctorSelect = "Doctor Selection"  // Added new step
+        case viewVitals = "View Vitals" // New step for viewing vitals
+        case doctorSelect = "Doctor Selection"
         
         var id: Self { self }
     }
@@ -59,6 +60,9 @@ struct ContentView: View {
     @State private var bypassBasicInfoValidation: Bool = false
     @State private var bypassDemographicsValidation: Bool = false 
     @State private var bypassSignatureValidation: Bool = false
+    
+    // Add state for showing vitals display
+    @State private var vitalsData: [String: Any]? = nil
     
     // MARK: - Computed Validation Properties
     private var isBasicInfoComplete: Bool {
@@ -130,6 +134,8 @@ struct ContentView: View {
                     if isUploadDocComplete {
                         steps.append(.vitals)
                         if isVitalsComplete {
+                            // Add viewVitals step when vitals are complete
+                            steps.append(.viewVitals)
                             steps.append(.doctorSelect)
                         }
                     }
@@ -158,77 +164,7 @@ struct ContentView: View {
                 // Patient Flow: NavigationView with a sidebar.
                 NavigationView {
                     // Sidebar with icons, step checks, and a Cancel button.
-                    VStack(alignment: .leading) {
-                        List(PatientFlowStep.allCases, id: \.self) { step in
-                            let isEnabled = (allowedSteps.contains(step) || step == .basicInfo)
-                            HStack {
-                                // Icon for each step.
-                                Group {
-                                    switch step {
-                                    case .basicInfo:
-                                        Image(systemName: "person.fill")
-                                    case .demographics:
-                                        Image(systemName: "info.bubble")
-                                    case .signature:
-                                        Image(systemName: "signature")
-                                    case .uploadDoc:
-                                        Image(systemName: "ecg.text.page")
-                                    case .vitals:
-                                        Image(systemName: "heart.text.clipboard")
-                                    case .doctorSelect:
-                                        Image(systemName: "stethoscope")
-                                    }
-                                }
-                                .frame(width: 24)
-                                
-                                Text(step.rawValue)
-                                
-                                Spacer()
-                                // Show a checkmark if the step is complete.
-                                if (step == .basicInfo && isBasicInfoComplete) ||
-                                   (step == .demographics && isDemographicsComplete) ||
-                                   (step == .vitals && isVitalsComplete) ||
-                                   (step == .uploadDoc && isUploadDocComplete) ||
-                                   (step == .signature && isSignatureComplete) ||
-                                   (step == .doctorSelect && isDoctorSelectComplete) {
-                                    Image(systemName: "checkmark.rectangle.fill")
-                                        .foregroundColor(.green)
-                                }
-                            }
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                // Only allow navigating to a step if it is allowed (or if it’s a previous step).
-                                let allSteps = PatientFlowStep.allCases
-                                if let tappedIndex = allSteps.firstIndex(of: step),
-                                   let currentIndex = allSteps.firstIndex(of: selectedFlowStep),
-                                   tappedIndex <= currentIndex || isEnabled {
-                                    selectedFlowStep = step
-                                }
-                            }
-                            .disabled(!isEnabled)
-                            .foregroundColor(isEnabled ? .primary : .gray)
-                        }
-
-
-                        Spacer()
-                        // Cancel button to reset patient data and return to dashboard.
-                        Button(action: {
-                            viewModel.resetPatientData()
-                            inPatientFlow = false
-                        }) {
-                            HStack {
-                                Image(systemName: "xmark.bin")
-                                Text("Cancel")
-                            }
-                            .foregroundColor(.red)
-                            .padding()
-                        }
-                        .frame(maxWidth: .infinity, alignment: .center)
-                    }
-                    .frame(minWidth: 250)
-                    .listStyle(SidebarListStyle())
-                    .navigationTitle("Processing: \(viewModel.patientModel.fullName)")
-                    .navigationBarTitleDisplayMode(.inline)
+                    sidebarView
                     
                     // Main content area.
                     content(for: selectedFlowStep)
@@ -351,8 +287,35 @@ struct ContentView: View {
                 
                 appointmentVM.checkForTodayClinic() // Refresh providers list
                 isVitalsComplete = true
-                selectedFlowStep = .doctorSelect
+                selectedFlowStep = .viewVitals
             }, patientModel: viewModel.patientModel)
+        case .viewVitals:
+            if let vitalsData = vitalsData {
+                VitalsDisplayView(vitalsData: vitalsData)
+                    .onAppear {
+                        // Fetch vitals data if not already loaded
+                        if vitalsData == nil {
+                            fetchVitalsData()
+                        }
+                    }
+            } else {
+                VStack {
+                    Text("Loading vitals data...")
+                        .font(.title)
+                        .foregroundColor(.secondary)
+                    ProgressView()
+                        .padding()
+                    
+                    Button("Refresh") {
+                        fetchVitalsData()
+                    }
+                    .padding()
+                }
+                .padding()
+                .onAppear {
+                    fetchVitalsData()
+                }
+            }
         case .doctorSelect:
             DoctorSelectView(
                 patientName: viewModel.patientModel.fullName,
@@ -366,6 +329,118 @@ struct ContentView: View {
                 }
             )
         }
+    }
+    
+    // MARK: - Sidebar View
+    private var sidebarView: some View {
+        VStack(alignment: .leading) {
+            List {
+                // Flow step options
+                ForEach(PatientFlowStep.allCases, id: \.self) { step in
+                    // Hide viewVitals from the main list as we'll handle it separately
+                    if step != .viewVitals {
+                        let isEnabled = (allowedSteps.contains(step) || step == .basicInfo)
+                        HStack {
+                            // Icon for each step.
+                            Group {
+                                switch step {
+                                case .basicInfo:
+                                    Image(systemName: "person.fill")
+                                case .demographics:
+                                    Image(systemName: "info.bubble")
+                                case .signature:
+                                    Image(systemName: "signature")
+                                case .uploadDoc:
+                                    Image(systemName: "ecg.text.page")
+                                case .vitals:
+                                    Image(systemName: "heart.text.clipboard")
+                                case .viewVitals:
+                                    Image(systemName: "heart.text.square")
+                                case .doctorSelect:
+                                    Image(systemName: "stethoscope")
+                                }
+                            }
+                            .frame(width: 24)
+                            
+                            Text(step.rawValue)
+                            
+                            Spacer()
+                            // Show a checkmark if the step is complete.
+                            if (step == .basicInfo && isBasicInfoComplete) ||
+                               (step == .demographics && isDemographicsComplete) ||
+                               (step == .vitals && isVitalsComplete) ||
+                               (step == .uploadDoc && isUploadDocComplete) ||
+                               (step == .signature && isSignatureComplete) ||
+                               (step == .doctorSelect && isDoctorSelectComplete) {
+                                Image(systemName: "checkmark.rectangle.fill")
+                                    .foregroundColor(.green)
+                            }
+                        }
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            // Only allow navigating to a step if it is allowed (or if it's a previous step).
+                            let allSteps = PatientFlowStep.allCases
+                            if let tappedIndex = allSteps.firstIndex(of: step),
+                               let currentIndex = allSteps.firstIndex(of: selectedFlowStep),
+                               tappedIndex <= currentIndex || isEnabled {
+                                selectedFlowStep = step
+                            }
+                        }
+                        .disabled(!isEnabled)
+                        .foregroundColor(isEnabled ? .primary : .gray)
+                    }
+                }
+            }
+            .listStyle(SidebarListStyle())
+            
+            Spacer()
+            
+            // View Vitals Button - only show if vitals have been completed, now at bottom
+            if isVitalsComplete {
+                Button(action: {
+                    selectedFlowStep = .viewVitals
+                }) {
+                    HStack {
+                        Image(systemName: "heart.text.square")
+                            .font(.system(size: 18))
+                        Text("View Vitals")
+                            .font(.headline)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 14))
+                    }
+                    .padding()
+                    .background(
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(UMSSBrand.navy.opacity(0.1))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .stroke(UMSSBrand.navy, lineWidth: 1)
+                            )
+                    )
+                    .foregroundColor(UMSSBrand.navy)
+                }
+                .padding(.horizontal)
+                .padding(.bottom, 8)
+            }
+            
+            // Cancel button to reset patient data and return to dashboard.
+            Button(action: {
+                viewModel.resetPatientData()
+                inPatientFlow = false
+            }) {
+                HStack {
+                    Image(systemName: "xmark.bin")
+                    Text("Cancel")
+                }
+                .foregroundColor(.red)
+                .padding()
+            }
+            .frame(maxWidth: .infinity, alignment: .center)
+        }
+        .frame(minWidth: 250)
+        .navigationTitle("Processing: \(viewModel.patientModel.fullName)")
+        .navigationBarTitleDisplayMode(.inline)
     }
     
     // MARK: - Next Button Helper
@@ -409,7 +484,7 @@ struct ContentView: View {
                                 self.isDoctorSelectComplete = true
                             }
                             
-                            self.selectedFlowStep = appointment.vitalsDone ?? false ? .doctorSelect : .vitals
+                            self.selectedFlowStep = appointment.vitalsDone ?? false ? .viewVitals : .vitals
                         }
                         withAnimation {
                             inPatientFlow = true
@@ -541,6 +616,39 @@ struct ContentView: View {
                 print("Error updating check-in status: \(error.localizedDescription)")
             } else {
                 print("Successfully updated check-in status to true")
+            }
+        }
+    }
+    
+    // MARK: - Fetch Vitals Data
+    private func fetchVitalsData() {
+        guard !viewModel.patientModel.appointmentId.isEmpty,
+              let officeId = appointmentVM.selectedOfficeId else {
+            print("Cannot fetch vitals: Missing appointment ID or office ID")
+            return
+        }
+        
+        let db = Firestore.firestore()
+        let appointmentRef = db.collection("offices")
+            .document(officeId)
+            .collection("appointments")
+            .document(viewModel.patientModel.appointmentId)
+        
+        appointmentRef.getDocument { (document, error) in
+            if let error = error {
+                print("Error fetching appointment data: \(error.localizedDescription)")
+                return
+            }
+            
+            guard let document = document, document.exists,
+                  let data = document.data(),
+                  let vitals = data["vitals"] as? [String: Any] else {
+                print("No vitals data found in document")
+                return
+            }
+            
+            DispatchQueue.main.async {
+                self.vitalsData = vitals
             }
         }
     }
