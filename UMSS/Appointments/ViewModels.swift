@@ -408,7 +408,7 @@ class AppointmentViewModel: ObservableObject {
     }
     
     // New method to update the vitals status
-    func updateVitalsStatus(appointmentId: String, completion: @escaping (Bool) -> Void) {
+    func updateVitalsStatus(appointmentId: String, vitalsData: [String: Any]? = nil, completion: @escaping (Bool) -> Void) {
         guard let officeId = selectedOfficeId else {
             print("No office ID selected for updating vitals status")
             completion(false)
@@ -422,15 +422,23 @@ class AppointmentViewModel: ObservableObject {
             .collection("appointments")
             .document(appointmentId)
         
-        appointmentRef.updateData([
+        // Create the update data with the required fields
+        var updateData: [String: Any] = [
             "vitalsDone": true,
             "vitalsCompletedTime": Timestamp(date: Date())
-        ]) { error in
+        ]
+        
+        // If vitals data was provided, add it to the update
+        if let vitals = vitalsData {
+            updateData["vitals"] = vitals
+        }
+        
+        appointmentRef.updateData(updateData) { error in
             if let error = error {
                 print("Error updating vitals status: \(error.localizedDescription)")
                 completion(false)
             } else {
-                print("Successfully updated vitals status to completed")
+                print("Successfully updated vitals status and stored vitals data")
                 completion(true)
             }
         }

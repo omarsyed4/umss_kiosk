@@ -335,14 +335,14 @@ struct ContentView: View {
                 isGeneratingPDF: isGeneratingPDF
             )
         case .vitals:
-            VitalsStepView(onComplete: {
+            VitalsStepView(onComplete: { vitalsData in
                 // Update vitals status in Firebase if we have an appointment ID
                 if !viewModel.patientModel.appointmentId.isEmpty {
-                    appointmentVM.updateVitalsStatus(appointmentId: viewModel.patientModel.appointmentId) { success in
+                    appointmentVM.updateVitalsStatus(appointmentId: viewModel.patientModel.appointmentId, vitalsData: vitalsData) { success in
                         if success {
-                            print("Vitals status updated successfully in Firebase")
+                            print("Vitals status and data updated successfully in Firebase")
                         } else {
-                            print("Failed to update vitals status in Firebase")
+                            print("Failed to update vitals status and data in Firebase")
                         }
                     }
                 } else {
