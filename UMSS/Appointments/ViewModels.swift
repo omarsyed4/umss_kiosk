@@ -320,12 +320,14 @@ class AppointmentViewModel: ObservableObject {
     }
     
     private func fetchAppointments(officeId: String, office: Office) {
-        // Hard-coded date for debugging - October 8th
-        let debugDate = "2025-10-08"
+        // Format today's date as YYYY-MM-DD for filtering appointments
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        let today = Date()
+        let todayString = dateFormatter.string(from: today)
         
         print("=== APPOINTMENT FETCHING DEBUG ===")
-        print("DEBUG: Fetching appointments for October 8th, 2025")
-        print("Debug Date String: \(debugDate)")
+        print("Fetching appointments for today: \(todayString)")
         print("Office ID: \(officeId)")
         print("Query path: offices/\(officeId)/appointments")
         
@@ -390,17 +392,17 @@ class AppointmentViewModel: ObservableObject {
                         )
                     }
                     
-                    // Filter appointments for October 8th
+                    // Filter appointments for today
                     self.appointments = allAppointments.filter { appointment in
-                        let isOctober8th = appointment.date == debugDate
-                        if isOctober8th {
-                            print("MATCHED October 8th appointment: \(appointment.patientName) at \(appointment.time)")
+                        let isToday = appointment.date == todayString
+                        if isToday {
+                            print("MATCHED today's appointment: \(appointment.patientName) at \(appointment.time)")
                         }
-                        return isOctober8th
+                        return isToday
                     }
                     
                     print("=== FINAL RESULTS ===")
-                    print("Successfully found \(self.appointments.count) appointments for October 8th (\(debugDate))")
+                    print("Successfully found \(self.appointments.count) appointments for today (\(todayString))")
                     for appointment in self.appointments {
                         print("  - \(appointment.patientName) at \(appointment.time) (ID: \(appointment.id))")
                     }
