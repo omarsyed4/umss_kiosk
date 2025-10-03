@@ -525,11 +525,63 @@ struct ContentView: View {
     // MARK: - PDF Preview and Upload Functions
     private func previewPDFAction() {
         isGeneratingPDF = true
+        
+        // Enhanced debugging for service account file
+        print("=== Service Account File Debug ===")
+        if let path = Bundle.main.path(forResource: "ServiceAccount", ofType: "json") {
+            print("✅ ServiceAccount.json found at: \(path)")
+            
+            // Check if file is readable
+            if FileManager.default.isReadableFile(atPath: path) {
+                print("✅ File is readable")
+                
+                // Check file size
+                if let attributes = try? FileManager.default.attributesOfItem(atPath: path),
+                   let size = attributes[.size] as? Int64 {
+                    print("✅ File size: \(size) bytes")
+                }
+            } else {
+                print("❌ File exists but is not readable")
+            }
+        } else {
+            print("❌ ServiceAccount.json not found in bundle!")
+            
+            // List all JSON files in bundle
+            if let bundlePath = Bundle.main.resourcePath {
+                let files = try? FileManager.default.contentsOfDirectory(atPath: bundlePath)
+                let jsonFiles = files?.filter { $0.hasSuffix(".json") } ?? []
+                print("JSON files in bundle: \(jsonFiles)")
+                print("All files in bundle: \(files?.prefix(20) ?? [])")
+            }
+            
+            // Check main bundle resource names
+            let resourceKeys: [URLResourceKey] = [.nameKey, .isRegularFileKey]
+            if let resourceURL = Bundle.main.resourceURL,
+               let enumerator = FileManager.default.enumerator(
+                at: resourceURL,
+                includingPropertiesForKeys: resourceKeys,
+                options: [.skipsHiddenFiles]
+               ) {
+                let allResources = enumerator.compactMap { $0 as? URL }
+                    .filter { url in
+                        guard let resourceValues = try? url.resourceValues(forKeys: Set(resourceKeys)),
+                              let isRegularFile = resourceValues.isRegularFile else { return false }
+                        return isRegularFile
+                    }
+                    .map { $0.lastPathComponent }
+                
+                let jsonResources = allResources.filter { $0.hasSuffix(".json") }
+                print("All JSON resources found: \(jsonResources)")
+            }
+        }
+        print("=== End Debug ===")
+        
         if accessToken == nil {
             getAccessToken { token in
                 guard let token = token else {
                     DispatchQueue.main.async {
                         self.isGeneratingPDF = false
+                        self.uploadStatus = "Failed to get access token - check ServiceAccount.json file"
                         print("Failed to get access token")
                     }
                     return
@@ -713,6 +765,20 @@ struct DashboardView: View {
             .padding()
         }
         .onAppear {
+            // Add logging when the view appears
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "M-d-yy"
+            let todayString = dateFormatter.string(from: Date())
+            
+            let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date()
+            let tomorrowDayId = Calendar.current.component(.weekday, from: tomorrow)
+            
+            print("DashboardView appeared")
+            print("Current date: \(Date())")
+            print("Today's date formatted for day document search: \(todayString)")
+            print("Tomorrow's date: \(tomorrow)")
+            print("Tomorrow's day ID: \(tomorrowDayId)")
+            
             // Start a timer to update more frequently - every 10 seconds
             // This ensures any displayed times will be refreshed periodically
             self.timer = Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { _ in
@@ -727,6 +793,7 @@ struct DashboardView: View {
         }
     }
 }
+
 
 struct CheckInDocumentView: View {
     // Callbacks for finishing the flow or previewing the PDF.

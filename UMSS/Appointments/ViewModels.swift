@@ -102,45 +102,74 @@ class AppointmentViewModel: ObservableObject {
         let todayString = dateFormatter.string(from: today)
         
         print("Checking if today (\(todayString)) is a clinic day...")
+        print("Looking for day documents with ID pattern: \(todayString)-*")
         
-        // Query the days collection for documents starting with today's date
-        // Format is now M-D-YY-officeId-startTime
+        // Calculate tomorrow's date
+        let calendar = Calendar.current
+        guard let tomorrow = calendar.date(byAdding: .day, value: 1, to: today) else {
+            DispatchQueue.main.async {
+            self.isLoading = false
+            self.errorMessage = "Error calculating tomorrow's date"
+            print("Error calculating tomorrow's date")
+            }
+            return
+        }
+        let tomorrowString = dateFormatter.string(from: tomorrow)
+
+        // Query the days collection for documents starting with tomorrow's date
+        // Format is M-D-YY-officeId-startTime
         db.collection("days")
-            .whereField(FieldPath.documentID(), isGreaterThanOrEqualTo: todayString)
-            .whereField(FieldPath.documentID(), isLessThan: todayString + "\u{f8ff}")
+            .whereField(FieldPath.documentID(), isGreaterThanOrEqualTo: tomorrowString)
+            .whereField(FieldPath.documentID(), isLessThan: tomorrowString + "\u{f8ff}")
             .getDocuments { [weak self] (querySnapshot, error) in
-                guard let self = self else { return }
+            guard let self = self else { return }
+            
+            if let error = error {
+                DispatchQueue.main.async {
+                self.isLoading = false
+                self.errorMessage = "Error checking clinic day: \(error.localizedDescription)"
+                print("Firestore error: \(error.localizedDescription)")
+                }
+                return
+            }
+            
+            guard let documents = querySnapshot?.documents else {
+                DispatchQueue.main.async {
+                self.isLoading = false
+                self.isClinicDay = false
+                print("No documents returned from query")
+                }
+                return
+            }
                 
-                if let error = error {
-                    DispatchQueue.main.async {
-                        self.isLoading = false
-                        self.errorMessage = "Error checking clinic day: \(error.localizedDescription)"
-                        print("Firestore error: \(error.localizedDescription)")
-                    }
-                    return
+                print("Query returned \(documents.count) documents:")
+                for doc in documents {
+                    print("  - Document ID: \(doc.documentID)")
                 }
                 
-                guard let documents = querySnapshot?.documents, !documents.isEmpty else {
+                guard !documents.isEmpty else {
                     DispatchQueue.main.async {
                         self.isLoading = false
                         self.isClinicDay = false
-                        print("Today is not a clinic day")
+                        print("Today is not a clinic day - no matching day documents found")
                     }
                     return
                 }
                 
                 // Use the first clinic document found for today
                 let document = documents[0]
-                print("Found today's clinic document: \(document.documentID)")
+                print("Using clinic document: \(document.documentID)")
                 
                 // Extract the officeId from the document ID
                 // Format: M-D-YY-officeId-startTime
                 let docIdComponents = document.documentID.components(separatedBy: "-")
+                print("Document ID components: \(docIdComponents)")
+                
                 guard docIdComponents.count >= 4 else {
                     DispatchQueue.main.async {
                         self.isLoading = false
                         self.errorMessage = "Invalid day document format"
-                        print("Day document ID doesn't match expected format")
+                        print("Day document ID doesn't match expected format - need at least 4 components, got \(docIdComponents.count)")
                     }
                     return
                 }
@@ -149,6 +178,7 @@ class AppointmentViewModel: ObservableObject {
                 let officeId = docIdComponents[3]
                 
                 print("Today is a clinic day at office ID: \(officeId)")
+                print("Full day document ID being used: \(document.documentID)")
                 self.selectedOfficeId = officeId
                 self.isClinicDay = true
                 
@@ -290,26 +320,17 @@ class AppointmentViewModel: ObservableObject {
     }
     
     private func fetchAppointments(officeId: String, office: Office) {
-        // Get start and end timestamps for today
-        let calendar = Calendar.current
-        let today = Date()
+        // Hard-coded date for debugging - October 8th
+        let debugDate = "2025-10-08"
         
-        let startOfDay = calendar.startOfDay(for: today)
-        guard let endOfDay = calendar.date(bySettingHour: 23, minute: 59, second: 59, of: today) else {
-            self.errorMessage = "Error creating date range"
-            self.isLoading = false
-            return
-        }
+        print("=== APPOINTMENT FETCHING DEBUG ===")
+        print("DEBUG: Fetching appointments for October 8th, 2025")
+        print("Debug Date String: \(debugDate)")
+        print("Office ID: \(officeId)")
+        print("Query path: offices/\(officeId)/appointments")
         
-        let startTimestamp = Timestamp(date: startOfDay)
-        let endTimestamp = Timestamp(date: endOfDay)
-        
-        print("Fetching appointments between \(startOfDay) and \(endOfDay)")
-        
-        // Query appointments for today only using Firestore query
+        // Fetch all appointments for this office and filter by date locally
         db.collection("offices").document(officeId).collection("appointments")
-            .whereField("dateTime", isGreaterThanOrEqualTo: startTimestamp)
-            .whereField("dateTime", isLessThanOrEqualTo: endTimestamp)
             .getDocuments { [weak self] (snapshot, error) in
                 guard let self = self else { return }
     
@@ -317,24 +338,27 @@ class AppointmentViewModel: ObservableObject {
                     self.isLoading = false
                     
                     if let error = error {
+                        print("ERROR fetching appointments: \(error.localizedDescription)")
                         self.errorMessage = "Error fetching appointments: \(error.localizedDescription)"
                         return
                     }
                     
                     guard let snapshot = snapshot else {
+                        print("ERROR: No appointments snapshot returned")
                         self.errorMessage = "No appointments data"
                         return
                     }
                     
-                    print("Found \(snapshot.documents.count) appointments for today")
+                    print("=== APPOINTMENT QUERY RESULTS ===")
+                    print("Found \(snapshot.documents.count) total appointments in office")
                     
-                    // Parse appointment documents
-                    self.appointments = snapshot.documents.compactMap { doc -> Appointment? in
+                    // Parse appointment documents and filter for today
+                    let allAppointments = snapshot.documents.compactMap { doc -> Appointment? in
                         let data = doc.data()
                         
                         // Read dateTime from Firestore
                         guard let dateTime = data["dateTime"] as? Timestamp else {
-                            print("dateTime is nil for document \(doc.documentID)")
+                            print("SKIPPING appointment \(doc.documentID): dateTime is nil or invalid")
                             return nil
                         }
                         
@@ -345,10 +369,12 @@ class AppointmentViewModel: ObservableObject {
                         dateFormatter.dateFormat = "yyyy-MM-dd"
                         let parsedDate = dateFormatter.string(from: appointmentDate)
     
-                        // Format time to "HH:mm"
+                        // Format time to "h:mm a"
                         let timeFormatter = DateFormatter()
                         timeFormatter.dateFormat = "h:mm a"
                         let parsedTime = timeFormatter.string(from: appointmentDate)
+                        
+                        print("FOUND appointment \(doc.documentID): \(parsedDate) at \(parsedTime)")
                         
                         // Build the new Appointment
                         return Appointment(
@@ -364,9 +390,25 @@ class AppointmentViewModel: ObservableObject {
                         )
                     }
                     
+                    // Filter appointments for October 8th
+                    self.appointments = allAppointments.filter { appointment in
+                        let isOctober8th = appointment.date == debugDate
+                        if isOctober8th {
+                            print("MATCHED October 8th appointment: \(appointment.patientName) at \(appointment.time)")
+                        }
+                        return isOctober8th
+                    }
+                    
+                    print("=== FINAL RESULTS ===")
+                    print("Successfully found \(self.appointments.count) appointments for October 8th (\(debugDate))")
+                    for appointment in self.appointments {
+                        print("  - \(appointment.patientName) at \(appointment.time) (ID: \(appointment.id))")
+                    }
+                    
                     // Sort appointments by time
                     self.appointments.sort { $0.time < $1.time }
                     self.todaysOffice = office
+                    print("=== END APPOINTMENT FETCHING DEBUG ===")
                 }
             }
     }
