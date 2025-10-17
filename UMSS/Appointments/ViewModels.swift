@@ -98,12 +98,10 @@ class AppointmentViewModel: ObservableObject {
         // Format today's date as M-D-YY for Firestore document query
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "M-d-yy"
+        dateFormatter.timeZone = TimeZone.current  // Use current timezone for consistency
         let today = Date()
         let todayString = dateFormatter.string(from: today)
-        
-        print("Checking if today (\(todayString)) is a clinic day...")
-        print("Looking for day documents with ID pattern: \(todayString)-*")
-        
+
         // Calculate tomorrow's date
         let calendar = Calendar.current
         guard let tomorrow = calendar.date(byAdding: .day, value: 1, to: today) else {
@@ -114,13 +112,19 @@ class AppointmentViewModel: ObservableObject {
             }
             return
         }
-        let tomorrowString = dateFormatter.string(from: tomorrow)
 
-        // Query the days collection for documents starting with tomorrow's date
+        let tomorrowString = dateFormatter.string(from: tomorrow)
+        
+        print("Checking if today (\(todayString)) is a clinic day...")
+        print("Looking for day documents with ID pattern: \(todayString)-*")
+        print("Query range: >= \(todayString) and < \(tomorrowString)")
+        
+
+        // Query the days collection for documents starting with today's date
         // Format is M-D-YY-officeId-startTime
         db.collection("days")
-            .whereField(FieldPath.documentID(), isGreaterThanOrEqualTo: tomorrowString)
-            .whereField(FieldPath.documentID(), isLessThan: tomorrowString + "\u{f8ff}")
+            .whereField(FieldPath.documentID(), isGreaterThanOrEqualTo: todayString)
+            .whereField(FieldPath.documentID(), isLessThan: tomorrowString)
             .getDocuments { [weak self] (querySnapshot, error) in
             guard let self = self else { return }
             
